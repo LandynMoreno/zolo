@@ -236,6 +236,30 @@ python config/sensor_calibration.py
 sudo python main.py
 ```
 
+## Git Workflow & Commit Standards
+When committing changes, follow the complete workflow:
+
+1. **Stage changes**: `git add <files>`
+2. **Check status**: `git status` (verify only expected files are staged)
+3. **Commit with descriptive message**: Clean, single-sentence commit messages
+4. **Push to origin**: `git push origin <branch>`
+
+**Commit Message Requirements**:
+- **Length**: 90-100+ characters for descriptive clarity
+- **Format**: Single sentence describing what was changed and why
+- **Style**: Imperative mood (e.g., "Add feature" not "Added feature")
+- **Include context**: Mention specific components/files affected when relevant
+
+```bash
+# Example commit workflow
+git add src/senses/light/tsl2561/light_sensor.py Claude.md
+git status  # Verify only expected files staged
+git commit -m "Replace magic numbers with constants in TSL2561 light sensor to maintain single source of truth for configuration values"
+git push origin master
+```
+
+**Important**: "Commit" means the full process - staging, committing, and pushing to origin.
+
 ## Safety Requirements
 - Implement emergency stop for all motor/actuator control
 - Use timeout mechanisms for all sensor readings (5 second default)
