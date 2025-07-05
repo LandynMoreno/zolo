@@ -18,6 +18,8 @@ except ImportError:
     board = None
     busio = None
 
+from .constants import LightConstants
+
 
 class LightSensor:
     """
@@ -26,7 +28,7 @@ class LightSensor:
     </summary>
     """
     
-    def __init__(self, i2c_address: int = 0x39) -> None:
+    def __init__(self, i2c_address: int = LightConstants.DEFAULT_I2C_ADDRESS) -> None:
         """
         <summary>Initialize light sensor with I2C configuration</summary>
         <param name="i2c_address">I2C address of the TSL2561 sensor</param>
@@ -36,8 +38,8 @@ class LightSensor:
         self.sensor = None
         self.i2c = None
         self.is_initialized = False
-        self.gain = 1
-        self.integration_time = 13  # milliseconds
+        self.gain = LightConstants.DEFAULT_GAIN
+        self.integration_time = LightConstants.DEFAULT_INTEGRATION_TIME
     
     def initialize(self) -> bool:
         """
@@ -94,16 +96,16 @@ class LightSensor:
         if luminosity is None:
             return "unknown"
         
-        if luminosity < 1:
-            return "dark"
-        elif luminosity < 10:
-            return "dim"
-        elif luminosity < 100:
-            return "bright"
+        if luminosity < LightConstants.THRESHOLD_DARK:
+            return LightConstants.LEVEL_DARK
+        elif luminosity < LightConstants.THRESHOLD_DIM:
+            return LightConstants.LEVEL_DIM
+        elif luminosity < LightConstants.THRESHOLD_BRIGHT:
+            return LightConstants.LEVEL_BRIGHT
         else:
-            return "very_bright"
+            return LightConstants.LEVEL_VERY_BRIGHT
     
-    def is_bright_enough(self, threshold_lux: float = 10.0) -> bool:
+    def is_bright_enough(self, threshold_lux: float = LightConstants.THRESHOLD_DIM) -> bool:
         """
         <summary>Check if ambient light is above threshold</summary>
         <param name="threshold_lux">Light threshold in lux</param>
@@ -120,7 +122,7 @@ class LightSensor:
         <param name="gain">Gain value (1 for low gain, 16 for high gain)</param>
         <returns>True if successful, False otherwise</returns>
         """
-        if gain in [1, 16]:
+        if gain in [LightConstants.GAIN_LOW, LightConstants.GAIN_HIGH]:
             self.gain = gain
             if self.sensor:
                 self.sensor.gain = gain
@@ -133,7 +135,7 @@ class LightSensor:
         <param name="time_ms">Integration time (13, 101, or 402 ms)</param>
         <returns>True if successful, False otherwise</returns>
         """
-        if time_ms in [13, 101, 402]:
+        if time_ms in [LightConstants.INTEGRATION_TIME_FAST, LightConstants.INTEGRATION_TIME_MEDIUM, LightConstants.INTEGRATION_TIME_SLOW]:
             self.integration_time = time_ms
             if self.sensor:
                 self.sensor.integration_time = time_ms

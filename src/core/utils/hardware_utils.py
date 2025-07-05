@@ -11,6 +11,8 @@ import threading
 from typing import Callable, Optional, Any
 from functools import wraps
 
+from ..constants.global_constants import ZoloConstants
+
 
 class HardwareUtils:
     """
@@ -20,7 +22,7 @@ class HardwareUtils:
     """
     
     @staticmethod
-    def retry_on_failure(max_retries: int = 3, delay: float = 0.1) -> Callable:
+    def retry_on_failure(max_retries: int = ZoloConstants.MAX_SENSOR_RETRIES, delay: float = 0.1) -> Callable:
         """
         <summary>Decorator to retry hardware operations on failure</summary>
         <param name="max_retries">Maximum number of retry attempts</param>

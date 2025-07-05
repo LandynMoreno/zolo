@@ -16,6 +16,8 @@ except ImportError:
     board = None
     neopixel = None
 
+from .constants import NeoPixelConstants
+
 
 class NeoPixelController:
     """
@@ -24,7 +26,7 @@ class NeoPixelController:
     </summary>
     """
     
-    def __init__(self, pin_number: int = 18, led_count: int = 12, brightness: float = 0.5) -> None:
+    def __init__(self, pin_number: int = NeoPixelConstants.DEFAULT_PIN, led_count: int = NeoPixelConstants.LED_COUNT, brightness: float = NeoPixelConstants.DEFAULT_BRIGHTNESS) -> None:
         """
         <summary>Initialize NeoPixel controller with hardware configuration</summary>
         <param name="pin_number">GPIO pin number for data line</param>
@@ -104,7 +106,7 @@ class NeoPixelController:
         self.brightness = brightness
         return True
     
-    def rainbow_cycle(self, speed: float = 0.1) -> bool:
+    def rainbow_cycle(self, speed: float = NeoPixelConstants.DEFAULT_ANIMATION_SPEED) -> bool:
         """
         <summary>Display rainbow color cycle animation</summary>
         <param name="speed">Animation speed (seconds between frames)</param>
@@ -116,7 +118,7 @@ class NeoPixelController:
         # Skeleton implementation
         return True
     
-    def breathing_effect(self, color: Tuple[int, int, int], speed: float = 0.05) -> bool:
+    def breathing_effect(self, color: Tuple[int, int, int], speed: float = NeoPixelConstants.ANIMATION_SPEED_FAST) -> bool:
         """
         <summary>Display breathing effect with specified color</summary>
         <param name="color">RGB color tuple (0-255, 0-255, 0-255)</param>
@@ -129,7 +131,7 @@ class NeoPixelController:
         # Skeleton implementation
         return True
     
-    def spinning_dot(self, color: Tuple[int, int, int], speed: float = 0.1) -> bool:
+    def spinning_dot(self, color: Tuple[int, int, int], speed: float = NeoPixelConstants.DEFAULT_ANIMATION_SPEED) -> bool:
         """
         <summary>Display spinning dot animation</summary>
         <param name="color">RGB color tuple (0-255, 0-255, 0-255)</param>

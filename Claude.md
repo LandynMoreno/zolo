@@ -177,6 +177,36 @@ class HardwarePins:
     FAN_CONTROL: int = 25
 ```
 
+### Function Parameter Constants Practice
+**IMPORTANT**: Always use constants for function default parameters instead of magic numbers to maintain consistency and avoid duplicate values.
+
+```python
+# ❌ BAD - Magic numbers in function parameters
+def __init__(self, i2c_address: int = 0x39, gain: int = 1, timeout: float = 5.0):
+    pass
+
+def is_bright_enough(self, threshold_lux: float = 10.0) -> bool:
+    pass
+
+# ✅ GOOD - Import and use constants
+from .constants import LightConstants
+from ..core.constants.global_constants import ZoloConstants
+
+def __init__(self, i2c_address: int = LightConstants.DEFAULT_I2C_ADDRESS, 
+             gain: int = LightConstants.DEFAULT_GAIN, 
+             timeout: float = ZoloConstants.DEFAULT_TIMEOUT):
+    pass
+
+def is_bright_enough(self, threshold_lux: float = LightConstants.THRESHOLD_DIM) -> bool:
+    pass
+```
+
+**Benefits**:
+- Single source of truth for all configuration values
+- No risk of inconsistent values across different files
+- Easier to modify defaults system-wide
+- Self-documenting code through constant names
+
 ## Hardware Configuration
 - **Raspberry Pi GPIO**: Use BCM pin numbering
 - **I2C Bus**: VL53L0X distance sensor, TSL2561 luminosity sensor

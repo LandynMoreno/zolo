@@ -14,6 +14,8 @@ except ImportError:
     # Fallback for development environment
     VL53L0X = None
 
+from .constants import DistanceConstants
+
 
 class DistanceSensor:
     """
@@ -22,7 +24,7 @@ class DistanceSensor:
     </summary>
     """
     
-    def __init__(self, i2c_address: int = 0x29) -> None:
+    def __init__(self, i2c_address: int = DistanceConstants.DEFAULT_I2C_ADDRESS) -> None:
         """
         <summary>Initialize distance sensor with I2C configuration</summary>
         <param name="i2c_address">I2C address of the VL53L0X sensor</param>
@@ -32,7 +34,7 @@ class DistanceSensor:
         self.sensor = None
         self.is_initialized = False
         self.measurement_mode = "single"
-        self.timing_budget = 33000  # microseconds
+        self.timing_budget = DistanceConstants.TIMING_BUDGET_DEFAULT
     
     def initialize(self) -> bool:
         """
@@ -76,7 +78,7 @@ class DistanceSensor:
             return distance_mm / 10.0
         return None
     
-    def is_object_detected(self, threshold_cm: float = 30.0) -> bool:
+    def is_object_detected(self, threshold_cm: float = DistanceConstants.PROXIMITY_THRESHOLD_CM) -> bool:
         """
         <summary>Check if object is detected within threshold distance</summary>
         <param name="threshold_cm">Detection threshold in centimeters</param>
@@ -104,7 +106,7 @@ class DistanceSensor:
         <param name="budget_us">Timing budget in microseconds</param>
         <returns>True if successful, False otherwise</returns>
         """
-        if 20000 <= budget_us <= 1000000:  # Valid range
+        if DistanceConstants.TIMING_BUDGET_MIN <= budget_us <= DistanceConstants.TIMING_BUDGET_MAX:
             self.timing_budget = budget_us
             return True
         return False
