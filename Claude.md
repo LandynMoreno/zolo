@@ -237,6 +237,10 @@ sudo python main.py
 ```
 
 ## Git Workflow & Commit Standards
+
+### Commit Authorization
+**CRITICAL**: Only commit when explicitly instructed to do so by the user. Never commit automatically or proactively.
+
 When committing changes, follow the complete workflow:
 
 1. **Stage changes**: `git add <files>`
@@ -245,7 +249,7 @@ When committing changes, follow the complete workflow:
 4. **Push to origin**: `git push origin <branch>`
 
 **Commit Message Requirements**:
-- **Length**: 90-100+ characters for descriptive clarity
+- **Length**: ~100 characters MAX for descriptive clarity
 - **Format**: Single sentence describing what was changed and why
 - **Style**: Imperative mood (e.g., "Add feature" not "Added feature")
 - **Include context**: Mention specific components/files affected when relevant
@@ -254,11 +258,38 @@ When committing changes, follow the complete workflow:
 # Example commit workflow
 git add src/senses/light/tsl2561/light_sensor.py Claude.md
 git status  # Verify only expected files staged
-git commit -m "Replace magic numbers with constants in TSL2561 light sensor to maintain single source of truth for configuration values"
+git commit -m "Replace magic numbers with constants in TSL2561 light sensor to maintain single source of truth"
 git push origin master
 ```
 
-**Important**: "Commit" means the full process - staging, committing, and pushing to origin.
+**Important**: "Commit" means the full process - staging, committing, and pushing to origin unless explicitly told otherwise.
+
+### Branching & Pull Request Workflow
+
+**Branch Creation**:
+- When user specifies to branch with a topic, create appropriately named branch
+- Use kebab-case naming convention (e.g., `feature/audio-integration`, `fix/sensor-calibration`)
+- **Default branching**: Always branch from `master` unless explicitly told otherwise
+- Checkout new branch immediately after creation
+
+**Pull Request Process**:
+- When user requests PR creation, open pull request to merge into `master` (unless different target specified)
+- Use descriptive PR title and summary of changes
+- Include test plan and implementation details
+
+**Git Rebase Practices**:
+- Always use `git rebase` instead of `git merge` for integrating branches
+- Keep linear commit history through rebasing
+- Use `git rebase -i` for cleaning up commit history before PR creation
+
+```bash
+# Example branching workflow
+git checkout -b feature/audio-integration
+# ... make changes ...
+git rebase master  # Before creating PR
+git push origin feature/audio-integration
+gh pr create --title "Add audio integration" --body "Implementation details..."
+```
 
 ## Safety Requirements
 - Implement emergency stop for all motor/actuator control
@@ -288,6 +319,83 @@ git push origin master
 - **Phase 3**: Cross-sense fusion and intelligent behavior
 - **Phase 4**: AI integration and autonomous operation
 
+## Working Modes
+
+### PLAN MODE
+**Purpose**: Strategic planning and architecture discussions without code implementation.
+
+**Characteristics**:
+- No code writing or modifications
+- Focus on system design, architecture decisions, and approach planning
+- Discuss trade-offs, options, and recommendations
+- Create implementation roadmaps and task breakdowns
+- Answer questions about approaches and feasibility
+
+**Example Activities**:
+- Discussing GUI architecture options
+- Planning sensor integration strategies
+- Evaluating technology choices
+- Breaking down complex features into phases
+
+### CODE MODE
+**Purpose**: Implementation-focused development with minimal discussion.
+
+**Characteristics**:
+- Direct code implementation and file modifications
+- Minimal explanatory text unless requested
+- Focus on writing, editing, and creating code
+- Apply established patterns and practices
+- Implement planned features efficiently
+
+**Example Activities**:
+- Writing new classes and functions
+- Implementing sensor integrations
+- Creating API endpoints
+- Building GUI components
+
+### HYBRID MODE
+**Purpose**: Planning + coding with concurrent discussion (non-verbose).
+
+**Characteristics**:
+- Implement code while explaining decisions
+- Discuss implementation choices as they're made
+- Brief explanations of "what" and "why" during coding
+- Balance between planning insights and actual implementation
+- Concise communication style
+
+**Example Activities**:
+- Building features while explaining architectural decisions
+- Implementing with real-time design adjustments
+- Coding with contextual reasoning
+
+### REVIEW MODE
+**Purpose**: Thorough code review with engineering rigor and bug prevention focus.
+
+**Critical Engineering Standards**:
+- **Bug Prevention**: Identify potential edge cases, null pointer exceptions, race conditions
+- **Scalability**: Assess code for performance bottlenecks and resource management
+- **Robustness**: Evaluate error handling, timeout mechanisms, and fail-safe behaviors
+- **Security**: Check for input validation, resource cleanup, and access control
+- **Maintainability**: Review code structure, naming conventions, and documentation
+- **Hardware Safety**: Verify GPIO cleanup, emergency stops, and hardware state management
+- **Type Safety**: Ensure proper type annotations and validate type consistency
+- **Memory Management**: Check for resource leaks and proper cleanup patterns
+
+**Review Responsibilities**:
+- **Voice Bug Concerns**: Actively identify and flag potential issues
+- **Demand Fixes**: Require resolution of identified problems before approval
+- **Validate Patterns**: Ensure adherence to established coding standards
+- **Test Coverage**: Verify appropriate error handling and edge case management
+- **Documentation**: Confirm code is self-documenting and properly annotated
+
+**Example Focus Areas**:
+- Hardware sensor timeout handling
+- GPIO resource cleanup on exceptions
+- Thread safety in sensor operations
+- Input validation for user commands
+- Emergency stop functionality
+- Memory leaks in continuous operations
+
 ## Context for Claude
 When working on Zolo:
 1. Always prioritize hardware safety and proper GPIO cleanup
@@ -297,3 +405,5 @@ When working on Zolo:
 5. Build incrementally with comprehensive testing
 6. Keep hardware specifications and pin assignments current
 7. Validate all sensor operations before hardware deployment
+8. **Mode Awareness**: Operate according to the specified working mode (PLAN/CODE/HYBRID/REVIEW)
+9. **Commit Process**: When instructed to commit, automatically review all code changes and commit messages for quality, consistency, and adherence to standards
