@@ -16,6 +16,8 @@ const VisionMedia = () => {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isGalleryModalOpen, setIsGalleryModalOpen] = useState(false);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
+  const [countdown, setCountdown] = useState(0);
+  const [isCountingDown, setIsCountingDown] = useState(false);
 
   const handleApiCall = (message) => {
     const notification = {
@@ -129,7 +131,23 @@ const VisionMedia = () => {
   };
 
   const handleCapturePhoto = () => {
-    handleApiCall('Would be calling API_ROUTE="/api/camera/capture" for capturing photo');
+    if (isCountingDown) return;
+    
+    setIsCountingDown(true);
+    setCountdown(3);
+    
+    const countdownInterval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(countdownInterval);
+          setIsCountingDown(false);
+          // Take the actual photo
+          handleApiCall('Would be calling API_ROUTE="/api/camera/capture" for capturing photo');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
   };
 
   const handleRecordVideo = () => {
@@ -190,14 +208,35 @@ const VisionMedia = () => {
                   Recording
                 </div>
               )}
+              
+              {/* Countdown Overlay */}
+              {isCountingDown && (
+                <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                  <motion.div
+                    key={countdown}
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 1.5, opacity: 0 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="text-white text-8xl font-bold"
+                  >
+                    {countdown}
+                  </motion.div>
+                </div>
+              )}
             </div>
             <div className="mt-4 flex gap-2">
               <button 
                 onClick={handleCapturePhoto}
-                className="button flex-1 flex items-center justify-center gap-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg py-2 px-4 transition-colors"
+                disabled={isCountingDown}
+                className={`button flex-1 flex items-center justify-center gap-2 rounded-lg py-2 px-4 transition-colors ${
+                  isCountingDown 
+                    ? 'bg-gray-400 cursor-not-allowed text-white' 
+                    : 'bg-primary-500 hover:bg-primary-600 text-white'
+                }`}
               >
                 <Camera className="w-4 h-4" />
-                Capture Photo
+                {isCountingDown ? `Taking Photo...` : 'Capture Photo'}
               </button>
               <button 
                 onClick={handleRecordVideo}

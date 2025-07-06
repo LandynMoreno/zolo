@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Mail, MapPin, Calendar, Camera, Edit, Save, X } from 'lucide-react';
+import { User, Mail, MapPin, Calendar, Camera, Edit, Save, X, Video, RotateCcw } from 'lucide-react';
+import Modal from '../shared/Modal';
 
 const ProfileSettings = ({ onApiCall }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [countdown, setCountdown] = useState(0);
   const [profileData, setProfileData] = useState({
     name: 'Robot Owner',
     email: 'owner@zolo.robot',
@@ -40,6 +44,27 @@ const ProfileSettings = ({ onApiCall }) => {
         [key]: value
       }
     }));
+  };
+
+  const handleCameraCapture = () => {
+    setIsCapturing(true);
+    setCountdown(3);
+    
+    const countdownInterval = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(countdownInterval);
+          setTimeout(() => {
+            onApiCall('Would be calling API_ROUTE="/api/profile/photo-capture" for capturing profile photo');
+            setIsCapturing(false);
+            setIsCameraModalOpen(false);
+            setCountdown(0);
+          }, 200);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
   };
 
   return (
@@ -90,7 +115,7 @@ const ProfileSettings = ({ onApiCall }) => {
               />
               {isEditing && (
                 <button
-                  onClick={() => onApiCall('Would be calling API_ROUTE="/api/profile/avatar" for updating profile avatar')}
+                  onClick={() => setIsCameraModalOpen(true)}
                   className="absolute bottom-0 right-0 p-1 bg-primary-500 text-white rounded-full hover:bg-primary-600"
                 >
                   <Camera className="w-3 h-3" />
@@ -271,6 +296,96 @@ const ProfileSettings = ({ onApiCall }) => {
           </div>
         </div>
       </div>
+
+      {/* Camera Modal */}
+      <Modal
+        isOpen={isCameraModalOpen}
+        onClose={() => !isCapturing && setIsCameraModalOpen(false)}
+        title="Take Profile Photo"
+        size="lg"
+      >
+        <div className="p-6">
+          <div className="relative bg-black rounded-lg overflow-hidden mb-6" style={{ aspectRatio: '4/3' }}>
+            {/* Camera Preview */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
+              <div className="text-center">
+                <Video className="w-16 h-16 mx-auto mb-4 text-white/50" />
+                <p className="text-white/70">Camera Preview</p>
+                <p className="text-white/50 text-sm mt-2">Position yourself in frame</p>
+              </div>
+            </div>
+            
+            {/* Countdown Overlay */}
+            {isCapturing && countdown > 0 && (
+              <motion.div
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 1.5, opacity: 0 }}
+                className="absolute inset-0 bg-black/50 flex items-center justify-center"
+              >
+                <motion.div
+                  key={countdown}
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 1.5, opacity: 0 }}
+                  className="text-white text-8xl font-bold"
+                >
+                  {countdown}
+                </motion.div>
+              </motion.div>
+            )}
+
+            {/* Camera Controls Overlay */}
+            <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center">
+              <button
+                onClick={() => onApiCall('Would be calling API_ROUTE="/api/camera/flip" for flipping camera')}
+                disabled={isCapturing}
+                className="p-3 bg-black/50 text-white rounded-full hover:bg-black/70 disabled:opacity-50"
+              >
+                <RotateCcw className="w-5 h-5" />
+              </button>
+              
+              <button
+                onClick={handleCameraCapture}
+                disabled={isCapturing}
+                className={`p-4 rounded-full transition-all ${
+                  isCapturing 
+                    ? 'bg-red-500 scale-110' 
+                    : 'bg-white text-black hover:bg-gray-100'
+                }`}
+              >
+                <Camera className="w-6 h-6" />
+              </button>
+              
+              <div className="w-12 h-12"></div>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => setIsCameraModalOpen(false)}
+              disabled={isCapturing}
+              className={`flex-1 button bg-surface border border-border py-2 rounded-lg hover:bg-surface/80 ${
+                isCapturing ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                onApiCall('Would be calling API_ROUTE="/api/profile/avatar-url" for setting custom avatar URL');
+                setIsCameraModalOpen(false);
+              }}
+              disabled={isCapturing}
+              className={`flex-1 button bg-primary-500 text-white py-2 rounded-lg hover:bg-primary-600 ${
+                isCapturing ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              Use URL Instead
+            </button>
+          </div>
+        </div>
+      </Modal>
     </motion.div>
   );
 };

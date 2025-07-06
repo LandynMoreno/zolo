@@ -6,6 +6,7 @@ import CalendarWidget from '../components/dashboard/CalendarWidget';
 import AlarmWidget from '../components/dashboard/AlarmWidget';
 import GitHubWidget from '../components/dashboard/GitHubWidget';
 import ApiNotification from '../components/shared/ApiNotification';
+import Modal from '../components/shared/Modal';
 
 /**
  * Dashboard/Home page - Main robot status and navigation hub
@@ -13,6 +14,10 @@ import ApiNotification from '../components/shared/ApiNotification';
  */
 const Dashboard = () => {
   const [notifications, setNotifications] = useState([]);
+  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const [isCountingDown, setIsCountingDown] = useState(false);
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   
   // Robot status data
   const robotStatus = {
@@ -81,6 +86,37 @@ const Dashboard = () => {
     setTimeout(() => {
       setNotifications(prev => prev.filter(n => n.id !== notification.id));
     }, 5000);
+  };
+
+  const handleTakePhoto = () => {
+    setIsCameraModalOpen(true);
+  };
+
+  const handleCameraCapture = () => {
+    if (isCountingDown) return;
+    
+    setIsCountingDown(true);
+    setCountdown(3);
+    
+    const countdownInterval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(countdownInterval);
+          setIsCountingDown(false);
+          setIsCameraModalOpen(false);
+          // Take the actual photo
+          handleApiCall('Would be calling API_ROUTE="/api/camera/capture" for capturing photo with countdown');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const handlePlayMusic = () => {
+    setIsMusicPlaying(!isMusicPlaying);
+    const action = isMusicPlaying ? 'stopping' : 'starting';
+    handleApiCall(`Would be calling API_ROUTE="/api/music/${isMusicPlaying ? 'pause' : 'play'}" for ${action} music playback`);
   };
 
   return (
@@ -165,6 +201,30 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
+              
+              {/* Audio Visualizer when music is playing */}
+              {isMusicPlaying && (
+                <div className="border-t border-border pt-3 mt-3">
+                  <h4 className="text-sm font-medium text-text-light mb-2">Now Playing</h4>
+                  <div className="h-12 bg-surface rounded-lg flex items-end justify-center gap-[2px] p-2">
+                    {Array.from({ length: 12 }).map((_, i) => (
+                      <motion.div
+                        key={i}
+                        className="w-2 rounded-t bg-primary-500"
+                        style={{ height: `${Math.random() * 60 + 20}%` }}
+                        animate={{ 
+                          height: [`${Math.random() * 60 + 20}%`, `${Math.random() * 60 + 20}%`]
+                        }}
+                        transition={{ 
+                          duration: 0.5 + Math.random() * 0.5,
+                          repeat: Infinity,
+                          repeatType: "reverse"
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           
@@ -174,17 +234,21 @@ const Dashboard = () => {
             <div className="space-y-3">
               <button 
                 className="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
-                onClick={() => handleApiCall('Would be calling API_ROUTE="/api/camera/capture" for taking photo')}
+                onClick={handleTakePhoto}
               >
                 <Camera className="w-4 h-4" />
                 Take Photo
               </button>
               <button 
-                className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
-                onClick={() => handleApiCall('Would be calling API_ROUTE="/api/music/play" for starting music playback')}
+                className={`w-full font-medium py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg ${
+                  isMusicPlaying 
+                    ? 'bg-orange-500 hover:bg-orange-600 text-white' 
+                    : 'bg-green-500 hover:bg-green-600 text-white'
+                }`}
+                onClick={handlePlayMusic}
               >
                 <Music className="w-4 h-4" />
-                Play Music
+                {isMusicPlaying ? 'Stop Music' : 'Play Music'}
               </button>
               <button 
                 className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
@@ -209,6 +273,72 @@ const Dashboard = () => {
           />
         ))}
       </div>
+
+      {/* Camera Modal with Countdown */}
+      <Modal
+        isOpen={isCameraModalOpen}
+        onClose={() => !isCountingDown && setIsCameraModalOpen(false)}
+        title="Take Photo"
+        size="lg"
+      >
+        <div className="p-6">
+          <div className="space-y-4">
+            {/* Camera Preview */}
+            <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
+              <div className="absolute inset-0 flex items-center justify-center text-white">
+                <div className="text-center">
+                  <Camera className="w-16 h-16 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm opacity-75">Camera preview would appear here</p>
+                </div>
+              </div>
+              
+              {/* Countdown Overlay */}
+              {isCountingDown && (
+                <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                  <motion.div
+                    key={countdown}
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 1.5, opacity: 0 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="text-white text-8xl font-bold"
+                  >
+                    {countdown}
+                  </motion.div>
+                </div>
+              )}
+            </div>
+            
+            {/* Capture Controls */}
+            <div className="flex justify-center items-center gap-4">
+              <button
+                onClick={handleCameraCapture}
+                disabled={isCountingDown}
+                className={`w-16 h-16 rounded-full flex items-center justify-center text-white transition-colors ${
+                  isCountingDown 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-primary-500 hover:bg-primary-600'
+                }`}
+                title="Capture photo"
+              >
+                <Camera className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="flex gap-3 pt-4">
+              <button
+                onClick={() => setIsCameraModalOpen(false)}
+                disabled={isCountingDown}
+                className={`flex-1 button bg-surface border border-border py-2 rounded-lg hover:bg-surface/80 ${
+                  isCountingDown ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                {isCountingDown ? 'Taking Photo...' : 'Cancel'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </motion.div>
   );
 };

@@ -25,7 +25,6 @@ const ThemeSettings = ({ theme, presets, actions, onApiCall }) => {
       className="space-y-6"
     >
       <div className="card">
-        <h3 className="text-xl font-semibold mb-6">Theme Customization</h3>
         
         {/* Dark Mode Toggle */}
         <div className="flex items-center justify-between mb-6">
@@ -82,16 +81,32 @@ const ThemeSettings = ({ theme, presets, actions, onApiCall }) => {
           <div className="grid grid-cols-2 gap-4">
             {['primary', 'secondary', 'accent', 'background'].map((colorKey) => (
               <div key={colorKey} className="flex items-center gap-3">
-                <input
-                  type="color"
-                  value={theme.colors[colorKey]}
-                  onChange={(e) => handleCustomColorChange(colorKey, e.target.value)}
-                  className="w-8 h-8 rounded border cursor-pointer"
-                  style={{ borderColor: 'transparent' }}
-                />
-                <div>
+                <div className="relative">
+                  <input
+                    type="color"
+                    value={theme.colors[colorKey]}
+                    onChange={(e) => handleCustomColorChange(colorKey, e.target.value)}
+                    className="w-12 h-12 rounded-lg border-2 cursor-pointer"
+                    style={{ 
+                      borderColor: 'var(--color-border)',
+                      backgroundColor: theme.colors[colorKey]
+                    }}
+                  />
+                  <div 
+                    className="absolute inset-1 rounded-md ring-2 ring-white/20"
+                    style={{ backgroundColor: theme.colors[colorKey] }}
+                  />
+                </div>
+                <div className="flex-1">
                   <div className="font-medium capitalize">{colorKey}</div>
-                  <div className="text-sm text-text-light">{theme.colors[colorKey]}</div>
+                  <div className="text-sm text-text-light font-mono">{theme.colors[colorKey].toUpperCase()}</div>
+                  <input
+                    type="text"
+                    value={theme.colors[colorKey]}
+                    onChange={(e) => handleCustomColorChange(colorKey, e.target.value)}
+                    className="text-xs bg-surface border border-border rounded px-2 py-1 mt-1 w-full font-mono"
+                    placeholder="#000000"
+                  />
                 </div>
               </div>
             ))}
