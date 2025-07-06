@@ -1,7 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(git add:*)",
+      "Bash(git checkout:*)",
+      "Bash(rm:*)",
+      "WebFetch(domain:zen-browser.app)",
+      "WebFetch(domain:upscayl.org)",
+      "WebFetch(domain:immich.app)",
+      "Bash(npm init:*)"
     ],
     "deny": []
   }
