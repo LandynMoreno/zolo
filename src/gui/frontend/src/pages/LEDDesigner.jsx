@@ -1,22 +1,103 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Palette, Save, Play, Square } from 'lucide-react';
+import { Palette, Save, Play, Square, Zap, Sun } from 'lucide-react';
+import ApiNotification from '../components/shared/ApiNotification';
 
 /**
  * NeoPixel LED Designer page - Touch-based LED pattern creation
- * Features color wheel, pattern designer, and live preview
+ * Features color wheel, pattern designer, and live preview with full functionality
  */
 const LEDDesigner = () => {
+  const [notifications, setNotifications] = useState([]);
   const [selectedColor, setSelectedColor] = useState('#E8A87C');
   const [brightness, setBrightness] = useState(80);
   const [selectedLED, setSelectedLED] = useState(null);
+  const [ledColors, setLedColors] = useState({});
+  const [isTestingPattern, setIsTestingPattern] = useState(false);
+
+  const handleApiCall = (message) => {
+    const notification = {
+      id: Date.now(),
+      message,
+      timestamp: new Date().toISOString()
+    };
+    setNotifications(prev => [...prev, notification]);
+    
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== notification.id));
+    }, 5000);
+  };
+
+  const patternPresets = [
+    { name: 'Warm White', colors: ['#FFF8DC', '#F5DEB3', '#DDD'], icon: '●' },
+    { name: 'Ocean Waves', colors: ['#0077BE', '#00A8CC', '#40E0D0'], icon: '~' },
+    { name: 'Sunset Fade', colors: ['#FF6B35', '#F7931E', '#FFD23F'], icon: '◐' },
+    { name: 'Rainbow Cycle', colors: ['#FF0000', '#00FF00', '#0000FF'], icon: '◉' },
+    { name: 'Breathing', colors: ['#E8A87C', '#D2691E', '#8B4513'], icon: '◔' },
+    { name: 'Sparkle', colors: ['#FFFFFF', '#FFD700', '#C0C0C0'], icon: '✦' }
+  ];
   
-  // Simulate 12 LED ring
-  const leds = Array.from({ length: 12 }, (_, i) => ({
-    id: i,
-    color: i % 3 === 0 ? selectedColor : '#333333',
-    active: i % 3 === 0
-  }));
+  // Simulate 12 LED ring with proper centering
+  const generateLEDs = () => {
+    return Array.from({ length: 12 }, (_, i) => {
+      const baseColor = ledColors[i] || '#333333';
+      return {
+        id: i,
+        color: baseColor,
+        active: baseColor !== '#333333'
+      };
+    });
+  };
+
+  const leds = generateLEDs();
+
+  const handleLEDClick = (index) => {
+    setSelectedLED(index);
+    setLedColors(prev => ({
+      ...prev,
+      [index]: selectedColor
+    }));
+    handleApiCall(`Would be calling API_ROUTE="/api/leds/${index}" for setting LED ${index} to color ${selectedColor}`);
+  };
+
+  const handleTestPattern = () => {
+    if (isTestingPattern) {
+      handleApiCall('Would be calling API_ROUTE="/api/leds/stop-test" for stopping test pattern');
+      setIsTestingPattern(false);
+    } else {
+      handleApiCall('Would be calling API_ROUTE="/api/leds/test-pattern" for starting test pattern');
+      setIsTestingPattern(true);
+      
+      // Simulate test pattern animation
+      setTimeout(() => {
+        setIsTestingPattern(false);
+      }, 3000);
+    }
+  };
+
+  const handleClearAll = () => {
+    handleApiCall('Would be calling API_ROUTE="/api/leds/clear" for clearing all LED colors');
+    setLedColors({});
+    setSelectedLED(null);
+  };
+
+  const handlePresetClick = (preset) => {
+    handleApiCall(`Would be calling API_ROUTE="/api/leds/preset" for applying ${preset.name} pattern`);
+    const newColors = {};
+    leds.forEach((_, index) => {
+      newColors[index] = preset.colors[index % preset.colors.length];
+    });
+    setLedColors(newColors);
+  };
+
+  const handleBrightnessChange = (newBrightness) => {
+    setBrightness(newBrightness);
+    handleApiCall(`Would be calling API_ROUTE="/api/leds/brightness" for setting brightness to ${newBrightness}%`);
+  };
+
+  const handleColorWheelClick = () => {
+    handleApiCall('Would be calling API_ROUTE="/api/color-picker" for opening advanced color picker');
+  };
 
   return (
     <motion.div
@@ -30,179 +111,214 @@ const LEDDesigner = () => {
           NeoPixel LED Designer
         </h1>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* LED Ring Preview */}
-          <div className="card">
-            <h3 className="text-xl font-semibold mb-6">Live LED Ring Preview</h3>
-            
-            {/* LED Ring Visualization */}
-            <div className="relative w-64 h-64 mx-auto mb-6">
-              <div className="absolute inset-0 rounded-full border-2 border-border"></div>
-              {leds.map((led, index) => {
-                const angle = (index * 30) - 90; // 30 degrees apart, starting at top
-                const x = 50 + 40 * Math.cos((angle * Math.PI) / 180);
-                const y = 50 + 40 * Math.sin((angle * Math.PI) / 180);
-                
-                return (
-                  <motion.button
-                    key={led.id}
-                    className="absolute w-6 h-6 rounded-full border-2 border-white shadow-lg cursor-pointer"
-                    style={{
-                      left: `${x}%`,
-                      top: `${y}%`,
-                      backgroundColor: led.color,
-                      transform: 'translate(-50%, -50%)',
-                      boxShadow: led.active ? `0 0 20px ${led.color}` : 'none',
-                    }}
-                    onClick={() => setSelectedLED(index)}
-                    whileHover={{ scale: 1.2 }}
-                    whileTap={{ scale: 0.9 }}
-                    animate={{ 
-                      scale: selectedLED === index ? 1.3 : 1,
-                      boxShadow: led.active ? `0 0 20px ${led.color}` : 'none'
-                    }}
-                  />
-                );
-              })}
-              
-              {/* Center indicator */}
-              <div className="absolute top-1/2 left-1/2 w-8 h-8 bg-surface rounded-full transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
-                <div className="w-4 h-4 bg-primary-500 rounded-full"></div>
-              </div>
-            </div>
-            
-            {/* Pattern Controls */}
-            <div className="flex gap-2 justify-center mb-4">
-              <button className="button flex items-center gap-2">
-                <Play size={16} />
-                Test Pattern
-              </button>
-              <button className="button-secondary flex items-center gap-2">
-                <Square size={16} />
-                Clear All
-              </button>
-            </div>
-            
-            {/* Brightness Control */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">
-                Brightness: {brightness}%
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={brightness}
-                onChange={(e) => setBrightness(e.target.value)}
-                className="w-full h-2 bg-border rounded-lg appearance-none cursor-pointer"
-                style={{
-                  background: `linear-gradient(to right, var(--color-primary) 0%, var(--color-primary) ${brightness}%, var(--color-border) ${brightness}%, var(--color-border) 100%)`
-                }}
-              />
-            </div>
-          </div>
-          
-          {/* Color Picker and Controls */}
-          <div className="space-y-6">
-            {/* Color Wheel */}
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* LED Ring Preview */}
             <div className="card">
-              <h3 className="text-lg font-semibold mb-4">Color Picker</h3>
+              <h3 className="text-xl font-semibold mb-6">Live LED Ring Preview</h3>
               
-              {/* Color Wheel Placeholder */}
-              <div className="w-48 h-48 rounded-full mx-auto mb-4 relative" 
-                   style={{
-                     background: `conic-gradient(
-                       hsl(0, 100%, 50%) 0deg,
-                       hsl(60, 100%, 50%) 60deg,
-                       hsl(120, 100%, 50%) 120deg,
-                       hsl(180, 100%, 50%) 180deg,
-                       hsl(240, 100%, 50%) 240deg,
-                       hsl(300, 100%, 50%) 300deg,
-                       hsl(360, 100%, 50%) 360deg
-                     )`
-                   }}>
-                <div className="absolute top-1/2 left-1/2 w-4 h-4 bg-white border-2 border-gray-800 rounded-full transform -translate-x-1/2 -translate-y-1/2 cursor-pointer">
+              {/* LED Ring Visualization */}
+              <div className="relative w-64 h-64 mx-auto mb-6">
+                <div className="absolute inset-0 rounded-full border-2 border-border"></div>
+                {leds.map((led, index) => {
+                  const angle = (index * 30) - 90; // 30 degrees apart, starting at top
+                  const radius = 105; // Fixed radius for proper centering
+                  const centerX = 128; // Half of 256px container
+                  const centerY = 128; // Half of 256px container
+                  const x = centerX + radius * Math.cos((angle * Math.PI) / 180);
+                  const y = centerY + radius * Math.sin((angle * Math.PI) / 180);
+                  
+                  return (
+                    <motion.button
+                      key={led.id}
+                      className="absolute w-6 h-6 rounded-full border-2 border-white shadow-lg cursor-pointer"
+                      style={{
+                        left: `${x}px`,
+                        top: `${y}px`,
+                        backgroundColor: led.color,
+                        transform: 'translate(-50%, -50%)',
+                        boxShadow: led.active ? `0 0 20px ${led.color}` : 'none',
+                      }}
+                      onClick={() => handleLEDClick(index)}
+                      whileHover={{ scale: 1.2 }}
+                      whileTap={{ scale: 0.9 }}
+                      animate={{ 
+                        scale: selectedLED === index ? 1.3 : 1,
+                        boxShadow: led.active ? `0 0 20px ${led.color}` : 'none',
+                        backgroundColor: isTestingPattern ? '#FFD700' : led.color
+                      }}
+                      transition={{ duration: 0.2 }}
+                    />
+                  );
+                })}
+                
+                {/* Center indicator */}
+                <div className="absolute top-1/2 left-1/2 w-8 h-8 bg-surface rounded-full transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
+                  <div className="w-4 h-4 bg-primary-500 rounded-full"></div>
                 </div>
               </div>
               
-              {/* Color Input */}
-              <div className="flex items-center gap-3">
-                <input
-                  type="color"
-                  value={selectedColor}
-                  onChange={(e) => setSelectedColor(e.target.value)}
-                  className="w-12 h-12 rounded-lg border-2 border-border cursor-pointer"
-                />
-                <input
-                  type="text"
-                  value={selectedColor}
-                  onChange={(e) => setSelectedColor(e.target.value)}
-                  className="flex-1 px-3 py-2 bg-surface border border-border rounded-lg"
-                  placeholder="#E8A87C"
-                />
+              {/* Pattern Controls */}
+              <div className="flex gap-2 justify-center mb-6">
+                <button 
+                  onClick={handleTestPattern}
+                  className={`button flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                    isTestingPattern 
+                      ? 'bg-red-500 hover:bg-red-600 text-white' 
+                      : 'bg-primary-500 hover:bg-primary-600 text-white'
+                  }`}
+                >
+                  {isTestingPattern ? <Square size={16} /> : <Play size={16} />}
+                  {isTestingPattern ? 'Stop Test' : 'Test Pattern'}
+                </button>
+                <button 
+                  onClick={handleClearAll}
+                  className="button bg-surface hover:bg-surface/80 text-text border border-border flex items-center gap-2 px-4 py-2 rounded-lg transition-colors"
+                >
+                  <Square size={16} />
+                  Clear All
+                </button>
               </div>
-            </div>
-            
-            {/* Quick Colors */}
-            <div className="card">
-              <h3 className="text-lg font-semibold mb-4">Quick Colors</h3>
-              <div className="grid grid-cols-6 gap-2">
-                {[
-                  '#E8A87C', '#FF6B4A', '#4299E1', '#68D391', 
-                  '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899',
-                  '#10B981', '#F97316', '#6366F1', '#84CC16'
-                ].map((color) => (
-                  <button
-                    key={color}
-                    className="w-10 h-10 rounded-lg border-2 hover:scale-110 transition-transform"
-                    style={{ 
-                      backgroundColor: color,
-                      borderColor: selectedColor === color ? '#fff' : 'transparent'
+              
+              {/* Brightness Control */}
+              <div className="mb-4">
+                <h4 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <Sun size={20} />
+                  Brightness
+                </h4>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={brightness}
+                    onChange={(e) => handleBrightnessChange(e.target.value)}
+                    className="flex-1 h-2 bg-border rounded-lg appearance-none cursor-pointer"
+                    style={{
+                      background: `linear-gradient(to right, var(--color-primary) 0%, var(--color-primary) ${brightness}%, var(--color-border) ${brightness}%, var(--color-border) 100%)`
                     }}
-                    onClick={() => setSelectedColor(color)}
                   />
-                ))}
+                  <span className="text-lg font-medium min-w-[4rem] text-primary-500">{brightness}%</span>
+                </div>
               </div>
             </div>
             
-            {/* Pattern Presets */}
-            <div className="card">
-              <h3 className="text-lg font-semibold mb-4">Pattern Presets</h3>
-              <div className="space-y-2">
-                {[
-                  { name: 'Warm White', pattern: 'solid' },
-                  { name: 'Ocean Waves', pattern: 'wave' },
-                  { name: 'Sunset Fade', pattern: 'fade' },
-                  { name: 'Rainbow Cycle', pattern: 'rainbow' },
-                  { name: 'Breathing', pattern: 'breath' },
-                  { name: 'Sparkle', pattern: 'sparkle' }
-                ].map((preset, i) => (
-                  <button
-                    key={i}
-                    className="w-full p-3 text-left rounded-lg hover:bg-surface transition-colors border border-border"
-                  >
-                    <div className="font-medium">{preset.name}</div>
-                    <div className="text-sm text-text-light capitalize">{preset.pattern} pattern</div>
-                  </button>
-                ))}
+            {/* Color Picker and Controls */}
+            <div className="space-y-6">
+              {/* Color Wheel */}
+              <div className="card">
+                <h3 className="text-lg font-semibold mb-4">Color Picker</h3>
+                
+                {/* Color Wheel */}
+                <button
+                  onClick={handleColorWheelClick}
+                  className="w-48 h-48 rounded-full mx-auto mb-4 relative cursor-pointer hover:scale-105 transition-transform" 
+                  style={{
+                    background: `conic-gradient(
+                      hsl(0, 100%, 50%) 0deg,
+                      hsl(60, 100%, 50%) 60deg,
+                      hsl(120, 100%, 50%) 120deg,
+                      hsl(180, 100%, 50%) 180deg,
+                      hsl(240, 100%, 50%) 240deg,
+                      hsl(300, 100%, 50%) 300deg,
+                      hsl(360, 100%, 50%) 360deg
+                    )`
+                  }}>
+                  <div className="absolute top-1/2 left-1/2 w-4 h-4 bg-white border-2 border-gray-800 rounded-full transform -translate-x-1/2 -translate-y-1/2">
+                  </div>
+                </button>
+                
+                {/* Color Input */}
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={selectedColor}
+                    onChange={(e) => {
+                      setSelectedColor(e.target.value);
+                      handleApiCall(`Would be calling API_ROUTE="/api/color-picker/set" for setting color to ${e.target.value}`);
+                    }}
+                    className="w-12 h-12 rounded-lg border-2 border-border cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={selectedColor}
+                    onChange={(e) => setSelectedColor(e.target.value)}
+                    className="flex-1 px-3 py-2 bg-background border border-border rounded-lg text-text placeholder-text-light"
+                    placeholder="#E8A87C"
+                    style={{ color: 'var(--color-text)' }}
+                  />
+                </div>
+              </div>
+              
+              {/* Quick Colors */}
+              <div className="card">
+                <h3 className="text-lg font-semibold mb-4">Quick Colors</h3>
+                <div className="grid grid-cols-6 gap-2">
+                  {[
+                    '#E8A87C', '#FF6B4A', '#4299E1', '#68D391', 
+                    '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899',
+                    '#10B981', '#F97316', '#6366F1', '#84CC16'
+                  ].map((color) => (
+                    <button
+                      key={color}
+                      className="w-10 h-10 rounded-lg border-2 hover:scale-110 transition-transform"
+                      style={{ 
+                        backgroundColor: color,
+                        borderColor: selectedColor === color ? 'var(--color-primary)' : 'transparent'
+                      }}
+                      onClick={() => {
+                        setSelectedColor(color);
+                        handleApiCall(`Would be calling API_ROUTE="/api/color-picker/quick" for selecting quick color ${color}`);
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
-            
-            {/* Save Pattern */}
-            <div className="card">
-              <h3 className="text-lg font-semibold mb-4">Save Custom Pattern</h3>
-              <input
-                type="text"
-                placeholder="Enter pattern name..."
-                className="w-full px-3 py-2 bg-surface border border-border rounded-lg mb-3"
-              />
-              <button className="button w-full flex items-center justify-center gap-2">
-                <Save size={16} />
-                Save Pattern
-              </button>
+          </div>
+
+          {/* Pattern Presets - Horizontal Layout */}
+          <div className="card">
+            <h3 className="text-lg font-semibold mb-4">Pattern Presets</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {patternPresets.map((preset, i) => (
+                <button
+                  key={i}
+                  onClick={() => handlePresetClick(preset)}
+                  className="p-4 text-left rounded-lg hover:bg-surface transition-colors border border-border flex items-center gap-4"
+                >
+                  <div className="flex gap-1">
+                    {preset.colors.map((color, idx) => (
+                      <div
+                        key={idx}
+                        className="w-4 h-4 rounded-full border border-white/20"
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-medium flex items-center gap-2">
+                      <span className="text-lg">{preset.icon}</span>
+                      {preset.name}
+                    </div>
+                    <div className="text-sm text-text-light">Click to apply pattern</div>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         </div>
+      </div>
+      
+      {/* API Notifications */}
+      <div className="fixed bottom-4 right-4 space-y-2 z-50">
+        {notifications.map(notification => (
+          <ApiNotification
+            key={notification.id}
+            message={notification.message}
+            onClose={() => setNotifications(prev => prev.filter(n => n.id !== notification.id))}
+          />
+        ))}
       </div>
     </motion.div>
   );

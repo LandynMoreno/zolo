@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { clsx } from 'clsx';
+import { useTheme } from '../hooks/useTheme';
 
 /**
  * Individual taskbar icon component with smooth animations and touch support
@@ -16,6 +17,7 @@ const TaskbarIcon = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { theme } = useTheme();
   const isActive = location.pathname === path;
 
   const handleClick = () => {
@@ -64,7 +66,11 @@ const TaskbarIcon = ({
         className={clsx(
           'relative flex items-center justify-center',
           'w-8 h-8 rounded-lg',
-          isActive ? 'text-primary-500' : 'text-white/80'
+          isActive 
+            ? 'text-primary-500' 
+            : theme.darkMode 
+              ? 'text-white/80' 
+              : 'text-gray-700'
         )}
         animate={{
           boxShadow: isActive 

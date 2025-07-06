@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta name="description" content="Zolo Robot GUI - Touch-friendly interface for robot control" />
+    <meta name="theme-color" content="#E8A87C" />
+    
+    <!-- Touch-friendly meta tags -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Zolo Robot" />
+    
+    <!-- Prevent zoom on double-tap -->
+    <meta name="format-detection" content="telephone=no" />
+    
+    <title>Zolo Robot GUI</title>
+    
+    <!-- Preconnect to Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Prevent FOUC with initial theme -->
+    <style>
+      /* Prevent flash of unstyled content */
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #FEFCF8;
+        color: #2C3E50;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        overflow-x: hidden;
+      }
+      
+      /* Loading state */
+      #root {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      /* Loading spinner */
+      .loading {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 40px;
+        height: 40px;
+        border: 3px solid #E8A87C20;
+        border-top: 3px solid #E8A87C;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: translate(-50%, -50%) rotate(0deg); }
+        100% { transform: translate(-50%, -50%) rotate(360deg); }
+      }
+      
+      /* Hide loading when React loads */
+      #root:not(:empty) + .loading {
+        display: none;
+      }
+      
+      /* Touch optimizations */
+      * {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+      }
+      
+      /* Allow text selection for inputs and content */
+      input, textarea, [contenteditable] {
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        user-select: text;
+      }
+      
+      /* Smooth scrolling */
+      html {
+        scroll-behavior: smooth;
+      }
+      
+      /* Custom scrollbar for webkit browsers */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+      }
+      
+      ::-webkit-scrollbar-thumb {
+        background: #E8A87C;
+        border-radius: 4px;
+      }
+      
+      ::-webkit-scrollbar-thumb:hover {
+        background: #D4B896;
+      }
+    </style>
+    <script type="module" crossorigin src="/assets/index-DNCPuSZE.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-HXrVk-AA.css">
+  </head>
+  <body>
+    <div id="root"></div>
+    
+    <!-- Loading fallback -->
+    <div class="loading"></div>
+    
+    <!-- Main app script -->
+    
+    <!-- Service worker for PWA capabilities -->
+    <script>
+      // Register service worker for offline capabilities
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('SW registered: ', registration);
+            })
+            .catch((registrationError) => {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+      
+      // Prevent default touch behaviors for better UX
+      document.addEventListener('touchstart', function(e) {
+        // Allow scrolling but prevent other default behaviors
+        if (e.touches.length > 1) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+      
+      // Prevent double-tap zoom
+      let lastTouchEnd = 0;
+      document.addEventListener('touchend', function(e) {
+        const now = (new Date()).getTime();
+        if (now - lastTouchEnd <= 300) {
+          e.preventDefault();
+        }
+        lastTouchEnd = now;
+      }, false);
+      
+      // Handle orientation changes
+      window.addEventListener('orientationchange', function() {
+        // Small delay to let the browser finish the orientation change
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+        }, 100);
+      });
+    </script>
+  </body>
+</html>

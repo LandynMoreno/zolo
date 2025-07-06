@@ -9,6 +9,7 @@ import VisionMedia from './pages/VisionMedia';
 import MusicAudio from './pages/MusicAudio';
 import LEDDesigner from './pages/LEDDesigner';
 import Settings from './pages/Settings';
+import Profile from './pages/Profile';
 
 // Import global styles
 import './styles/globals.css';
@@ -30,6 +31,7 @@ const App = () => {
               <Route path="/music" element={<MusicAudio />} />
               <Route path="/leds" element={<LEDDesigner />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/profile" element={<Profile />} />
             </Routes>
           </main>
           
