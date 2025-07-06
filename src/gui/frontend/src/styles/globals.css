@@ -109,6 +109,38 @@ body {
   box-shadow: var(--shadow-lg);
 }
 
+/* Compact layout for landscape 800x480 and similar small screens */
+@media (max-width: 900px) {
+  .card {
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+  }
+  
+  .card h3 {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .card h2 {
+    font-size: 1.25rem;
+  }
+  
+  /* Reduce button padding for compact layout */
+  .button {
+    padding: var(--spacing-xs) var(--spacing-md);
+    min-height: 36px;
+  }
+  
+  /* Tighter spacing overall */
+  .space-y-6 > * + * {
+    margin-top: 1rem !important;
+  }
+  
+  .space-y-3 > * + * {
+    margin-top: 0.5rem !important;
+  }
+}
+
 .button {
   background: var(--color-primary);
   color: white;

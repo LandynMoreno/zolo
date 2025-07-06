@@ -9,10 +9,16 @@ const GitHubWidget = ({ onApiCall }) => {
   const generateCommitData = () => {
     const data = [];
     const today = new Date();
-    const startDate = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+    const daysToShow = 52 * 7; // 52 weeks = 364 days
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - daysToShow + 1);
     
-    for (let d = new Date(startDate); d <= today; d.setDate(d.getDate() + 1)) {
-      const dayOfWeek = d.getDay();
+    // Generate data for exactly 52 weeks (364 days)
+    for (let i = 0; i < daysToShow; i++) {
+      const currentDate = new Date(startDate);
+      currentDate.setDate(startDate.getDate() + i);
+      
+      const dayOfWeek = currentDate.getDay();
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
       
       let count = 0;
@@ -27,9 +33,10 @@ const GitHubWidget = ({ onApiCall }) => {
       }
       
       data.push({
-        date: new Date(d).toISOString().split('T')[0],
+        date: currentDate.toISOString().split('T')[0],
         count,
-        level: count === 0 ? 0 : count < 3 ? 1 : count < 6 ? 2 : count < 10 ? 3 : 4
+        level: count === 0 ? 0 : count < 3 ? 1 : count < 6 ? 2 : count < 10 ? 3 : 4,
+        dayOfWeek: dayOfWeek
       });
     }
     return data;
@@ -88,26 +95,57 @@ const GitHubWidget = ({ onApiCall }) => {
   ];
 
   const getIntensityColor = (level) => {
+    // GitHub's actual green color scheme
     switch (level) {
       case 0: return 'bg-gray-100 dark:bg-gray-800';
-      case 1: return 'bg-green-200 dark:bg-green-900';
-      case 2: return 'bg-green-400 dark:bg-green-700';
-      case 3: return 'bg-green-600 dark:bg-green-500';
-      case 4: return 'bg-green-800 dark:bg-green-300';
+      case 1: return 'bg-green-100 dark:bg-green-900';
+      case 2: return 'bg-green-300 dark:bg-green-700';
+      case 3: return 'bg-green-500 dark:bg-green-500';
+      case 4: return 'bg-green-700 dark:bg-green-300';
       default: return 'bg-gray-100 dark:bg-gray-800';
     }
+  };
+
+  const organizeDataIntoWeeks = (data) => {
+    const weeks = [];
+    let currentWeek = [];
+    
+    data.forEach((day, index) => {
+      // If it's Sunday (0) and we have days in current week, start new week
+      if (day.dayOfWeek === 0 && currentWeek.length > 0) {
+        weeks.push(currentWeek);
+        currentWeek = [];
+      }
+      
+      currentWeek.push(day);
+      
+      // If we've reached the end of data, push the last week
+      if (index === data.length - 1) {
+        weeks.push(currentWeek);
+      }
+    });
+    
+    return weeks;
   };
 
   const getMonthLabels = () => {
     const labels = [];
     const today = new Date();
-    const startDate = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - (52 * 7) + 1);
     
-    for (let d = new Date(startDate); d <= today; d.setMonth(d.getMonth() + 1)) {
-      if (d.getDate() === 1) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    let currentMonth = startDate.getMonth();
+    
+    for (let week = 0; week < 52; week++) {
+      const weekDate = new Date(startDate);
+      weekDate.setDate(startDate.getDate() + week * 7);
+      
+      if (weekDate.getMonth() !== currentMonth) {
+        currentMonth = weekDate.getMonth();
         labels.push({
-          month: d.toLocaleDateString('en-US', { month: 'short' }),
-          position: Math.floor((d - startDate) / (1000 * 60 * 60 * 24))
+          month: months[currentMonth],
+          position: week
         });
       }
     }
@@ -145,14 +183,39 @@ const GitHubWidget = ({ onApiCall }) => {
             </div>
           </div>
           
-          <div className="grid grid-cols-52 gap-[1px] p-2 bg-surface rounded-lg">
-            {commitData.slice(-52).map((day, index) => (
-              <div
-                key={index}
-                className={`w-[3px] h-[3px] rounded-[1px] ${getIntensityColor(day.level)}`}
-                title={`${day.count} commits on ${day.date}`}
-              />
-            ))}
+          <div className="p-3 bg-surface rounded-lg">
+            <div className="grid grid-cols-53 gap-[2px]">
+              {/* Day labels */}
+              <div className="col-span-1">
+                <div className="grid grid-rows-7 gap-[2px] h-full text-xs text-gray-500">
+                  <div></div>
+                  <div>Mon</div>
+                  <div></div>
+                  <div>Wed</div>
+                  <div></div>
+                  <div>Fri</div>
+                  <div></div>
+                </div>
+              </div>
+              
+              {/* Contribution squares */}
+              {organizeDataIntoWeeks(commitData).map((week, weekIndex) => (
+                <div key={weekIndex} className="grid grid-rows-7 gap-[2px]">
+                  {Array.from({ length: 7 }, (_, dayIndex) => {
+                    const dayData = week.find(day => day.dayOfWeek === dayIndex);
+                    return (
+                      <div
+                        key={dayIndex}
+                        className={`w-[10px] h-[10px] rounded-sm ${
+                          dayData ? getIntensityColor(dayData.level) : 'bg-gray-50 dark:bg-gray-900'
+                        } hover:ring-1 hover:ring-primary-500 cursor-pointer transition-all`}
+                        title={dayData ? `${dayData.count} commits on ${dayData.date}` : 'No data'}
+                      />
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -208,23 +271,58 @@ const GitHubWidget = ({ onApiCall }) => {
               <div className="mb-4">
                 <h4 className="font-medium mb-2">Contribution Graph</h4>
                 <div className="relative">
-                  <div className="grid grid-cols-53 gap-[2px] p-4 bg-surface rounded-lg">
-                    {commitData.map((day, index) => (
-                      <div
-                        key={index}
-                        className={`w-[10px] h-[10px] rounded-sm ${getIntensityColor(day.level)} hover:ring-2 hover:ring-primary-500 cursor-pointer transition-all`}
-                        title={`${day.count} commits on ${day.date}`}
-                      />
-                    ))}
+                  <div className="p-4 bg-surface rounded-lg overflow-x-auto">
+                    <div className="grid grid-cols-53 gap-[2px] min-w-fit">
+                      {/* Day labels */}
+                      <div className="col-span-1">
+                        <div className="grid grid-rows-7 gap-[2px] h-full text-xs text-gray-500">
+                          <div>Sun</div>
+                          <div>Mon</div>
+                          <div>Tue</div>
+                          <div>Wed</div>
+                          <div>Thu</div>
+                          <div>Fri</div>
+                          <div>Sat</div>
+                        </div>
+                      </div>
+                      
+                      {/* Contribution squares */}
+                      {organizeDataIntoWeeks(commitData).map((week, weekIndex) => (
+                        <div key={weekIndex} className="grid grid-rows-7 gap-[2px]">
+                          {Array.from({ length: 7 }, (_, dayIndex) => {
+                            const dayData = week.find(day => day.dayOfWeek === dayIndex);
+                            return (
+                              <div
+                                key={dayIndex}
+                                className={`w-[12px] h-[12px] rounded-sm ${
+                                  dayData ? getIntensityColor(dayData.level) : 'bg-gray-50 dark:bg-gray-900'
+                                } hover:ring-2 hover:ring-primary-500 cursor-pointer transition-all`}
+                                title={dayData ? `${dayData.count} commits on ${dayData.date}` : 'No data'}
+                              />
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Month labels */}
+                    <div className="flex justify-between text-xs text-text-light mt-2 ml-8">
+                      {getMonthLabels().map(({ month, position }) => (
+                        <span key={`${month}-${position}`} style={{ marginLeft: `${position * 14}px` }}>
+                          {month}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex justify-between text-xs text-text-light mt-2">
+                  
+                  <div className="flex justify-between items-center text-xs text-text-light mt-2">
                     <span>Less</span>
                     <div className="flex items-center gap-1">
                       <div className="w-[10px] h-[10px] rounded-sm bg-gray-100 dark:bg-gray-800" />
-                      <div className="w-[10px] h-[10px] rounded-sm bg-green-200 dark:bg-green-900" />
-                      <div className="w-[10px] h-[10px] rounded-sm bg-green-400 dark:bg-green-700" />
-                      <div className="w-[10px] h-[10px] rounded-sm bg-green-600 dark:bg-green-500" />
-                      <div className="w-[10px] h-[10px] rounded-sm bg-green-800 dark:bg-green-300" />
+                      <div className="w-[10px] h-[10px] rounded-sm bg-green-100 dark:bg-green-900" />
+                      <div className="w-[10px] h-[10px] rounded-sm bg-green-300 dark:bg-green-700" />
+                      <div className="w-[10px] h-[10px] rounded-sm bg-green-500 dark:bg-green-500" />
+                      <div className="w-[10px] h-[10px] rounded-sm bg-green-700 dark:bg-green-300" />
                     </div>
                     <span>More</span>
                   </div>

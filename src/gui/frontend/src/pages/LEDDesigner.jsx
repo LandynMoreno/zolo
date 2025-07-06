@@ -104,22 +104,16 @@ const LEDDesigner = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="min-h-screen bg-background p-4"
+      className="min-h-screen bg-background p-2"
     >
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-primary-500 mb-8 font-poppins">
-          NeoPixel LED Designer
-        </h1>
-        
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="max-w-full mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
             {/* LED Ring Preview */}
             <div className="card">
               <h3 className="text-xl font-semibold mb-6">Live LED Ring Preview</h3>
               
               {/* LED Ring Visualization */}
               <div className="relative w-64 h-64 mx-auto mb-6">
-                <div className="absolute inset-0 rounded-full border-2 border-border"></div>
                 {leds.map((led, index) => {
                   const angle = (index * 30) - 90; // 30 degrees apart, starting at top
                   const radius = 105; // Fixed radius for proper centering
@@ -151,11 +145,6 @@ const LEDDesigner = () => {
                     />
                   );
                 })}
-                
-                {/* Center indicator */}
-                <div className="absolute top-1/2 left-1/2 w-8 h-8 bg-surface rounded-full transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
-                  <div className="w-4 h-4 bg-primary-500 rounded-full"></div>
-                </div>
               </div>
               
               {/* Pattern Controls */}
@@ -203,33 +192,67 @@ const LEDDesigner = () => {
               </div>
             </div>
             
-            {/* Color Picker and Controls */}
-            <div className="space-y-6">
-              {/* Color Wheel */}
+            {/* Pattern Presets and Quick Colors */}
+            <div className="lg:col-span-2 space-y-3">
+              {/* Pattern Presets */}
               <div className="card">
-                <h3 className="text-lg font-semibold mb-4">Color Picker</h3>
+                <h3 className="text-lg font-semibold mb-4">Pattern Presets</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {patternPresets.map((preset, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handlePresetClick(preset)}
+                      className="p-3 text-left rounded-lg hover:bg-surface transition-colors border border-border flex items-center gap-3"
+                    >
+                      <div className="flex gap-1">
+                        {preset.colors.map((color, idx) => (
+                          <div
+                            key={idx}
+                            className="w-3 h-3 rounded-full border border-white/20"
+                            style={{ backgroundColor: color }}
+                          />
+                        ))}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium flex items-center gap-2 text-sm">
+                          <span className="text-sm">{preset.icon}</span>
+                          {preset.name}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Quick Colors - Enhanced */}
+              <div className="card">
+                <h3 className="text-lg font-semibold mb-4">Quick Colors</h3>
+                <div className="grid grid-cols-6 gap-2">
+                  {[
+                    // Row 1
+                    '#E8A87C', '#FF6B4A', '#4299E1', '#68D391', '#F59E0B', '#EF4444',
+                    // Row 2  
+                    '#8B5CF6', '#EC4899', '#10B981', '#F97316', '#6366F1', '#84CC16',
+                    // Row 3 - New row
+                    '#FF1744', '#00E676', '#00BCD4', '#FFD54F', '#9C27B0', '#607D8B'
+                  ].map((color) => (
+                    <button
+                      key={color}
+                      className="w-10 h-10 rounded-lg border-2 hover:scale-110 transition-transform"
+                      style={{ 
+                        backgroundColor: color,
+                        borderColor: selectedColor === color ? 'var(--color-primary)' : 'transparent'
+                      }}
+                      onClick={() => {
+                        setSelectedColor(color);
+                        handleApiCall(`Would be calling API_ROUTE="/api/color-picker/quick" for selecting quick color ${color}`);
+                      }}
+                    />
+                  ))}
+                </div>
                 
-                {/* Color Wheel */}
-                <button
-                  onClick={handleColorWheelClick}
-                  className="w-48 h-48 rounded-full mx-auto mb-4 relative cursor-pointer hover:scale-105 transition-transform" 
-                  style={{
-                    background: `conic-gradient(
-                      hsl(0, 100%, 50%) 0deg,
-                      hsl(60, 100%, 50%) 60deg,
-                      hsl(120, 100%, 50%) 120deg,
-                      hsl(180, 100%, 50%) 180deg,
-                      hsl(240, 100%, 50%) 240deg,
-                      hsl(300, 100%, 50%) 300deg,
-                      hsl(360, 100%, 50%) 360deg
-                    )`
-                  }}>
-                  <div className="absolute top-1/2 left-1/2 w-4 h-4 bg-white border-2 border-gray-800 rounded-full transform -translate-x-1/2 -translate-y-1/2">
-                  </div>
-                </button>
-                
-                {/* Color Input */}
-                <div className="flex items-center gap-3">
+                {/* Custom Color Input */}
+                <div className="flex items-center gap-3 mt-4">
                   <input
                     type="color"
                     value={selectedColor}
@@ -249,65 +272,8 @@ const LEDDesigner = () => {
                   />
                 </div>
               </div>
-              
-              {/* Quick Colors */}
-              <div className="card">
-                <h3 className="text-lg font-semibold mb-4">Quick Colors</h3>
-                <div className="grid grid-cols-6 gap-2">
-                  {[
-                    '#E8A87C', '#FF6B4A', '#4299E1', '#68D391', 
-                    '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899',
-                    '#10B981', '#F97316', '#6366F1', '#84CC16'
-                  ].map((color) => (
-                    <button
-                      key={color}
-                      className="w-10 h-10 rounded-lg border-2 hover:scale-110 transition-transform"
-                      style={{ 
-                        backgroundColor: color,
-                        borderColor: selectedColor === color ? 'var(--color-primary)' : 'transparent'
-                      }}
-                      onClick={() => {
-                        setSelectedColor(color);
-                        handleApiCall(`Would be calling API_ROUTE="/api/color-picker/quick" for selecting quick color ${color}`);
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
-
-          {/* Pattern Presets - Horizontal Layout */}
-          <div className="card">
-            <h3 className="text-lg font-semibold mb-4">Pattern Presets</h3>
-            <div className="grid grid-cols-2 gap-3">
-              {patternPresets.map((preset, i) => (
-                <button
-                  key={i}
-                  onClick={() => handlePresetClick(preset)}
-                  className="p-4 text-left rounded-lg hover:bg-surface transition-colors border border-border flex items-center gap-4"
-                >
-                  <div className="flex gap-1">
-                    {preset.colors.map((color, idx) => (
-                      <div
-                        key={idx}
-                        className="w-4 h-4 rounded-full border border-white/20"
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium flex items-center gap-2">
-                      <span className="text-lg">{preset.icon}</span>
-                      {preset.name}
-                    </div>
-                    <div className="text-sm text-text-light">Click to apply pattern</div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
       </div>
       
       {/* API Notifications */}

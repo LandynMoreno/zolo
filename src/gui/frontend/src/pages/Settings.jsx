@@ -74,14 +74,10 @@ const Settings = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="min-h-screen bg-background p-4"
+      className="min-h-screen bg-background p-2"
     >
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-primary-500 mb-8 font-poppins">
-          Settings
-        </h1>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="max-w-full mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
           {/* Settings Navigation */}
           <div className="card">
             <h3 className="text-lg font-semibold mb-4">Categories</h3>

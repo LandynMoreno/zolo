@@ -168,14 +168,10 @@ const VisionMedia = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="min-h-screen bg-background p-4"
+      className="min-h-screen bg-background p-2"
     >
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-primary-500 mb-8 font-poppins">
-          Vision Hub
-        </h1>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="max-w-full mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           {/* Live Camera Feed */}
           <div className="card">
             <h3 className="text-xl font-semibold mb-4">Live Camera Feed</h3>

@@ -116,12 +116,9 @@ const Profile = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="min-h-screen bg-background p-4"
+      className="min-h-screen bg-background p-2"
     >
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-primary-500 mb-8 font-poppins">
-          Profile
-        </h1>
+      <div className="max-w-full mx-auto">
 
         {/* Profile Header */}
         <div className="card mb-6">

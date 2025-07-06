@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Play, Pause, SkipBack, SkipForward, Volume2, Shuffle, Repeat, Heart, Plus, X, Edit, Music, List, Search } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume2, Shuffle, Repeat, Heart, Plus, X, Edit, Music, List, Search, Camera } from 'lucide-react';
 import Modal from '../components/shared/Modal';
 import ApiNotification from '../components/shared/ApiNotification';
 
@@ -23,6 +23,8 @@ const MusicAudio = () => {
   const [isCreatePlaylistModalOpen, setIsCreatePlaylistModalOpen] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [newPlaylistCover, setNewPlaylistCover] = useState('');
+  const [currentPlaylist, setCurrentPlaylist] = useState(null); // Currently playing playlist
+  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
 
   const handleApiCall = (message) => {
     const notification = {
@@ -111,6 +113,14 @@ const MusicAudio = () => {
     { id: 9, title: 'Forest Sounds', artist: 'Nature Collective', cover: 'https://picsum.photos/100/100?random=303' }
   ];
 
+  // Set default playlist on component mount
+  useEffect(() => {
+    if (!currentPlaylist && playlists.length > 0) {
+      setCurrentPlaylist(playlists[0]);
+      setSelectedPlaylist(playlists[0]);
+    }
+  }, [currentPlaylist, playlists]);
+
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -155,6 +165,13 @@ const MusicAudio = () => {
     setIsPlaylistModalOpen(true);
   };
 
+  const handlePlayPlaylist = (playlist) => {
+    handleApiCall(`Would be calling API_ROUTE="/api/playlists/${playlist.id}/play" for playing ${playlist.name} playlist`);
+    setCurrentPlaylist(playlist);
+    setCurrentSong(0); // Start from first song
+    setIsPlaying(true);
+  };
+
   const handleCreatePlaylist = () => {
     if (newPlaylistName.trim()) {
       handleApiCall('Would be calling API_ROUTE="/api/playlists" for creating new playlist');
@@ -162,6 +179,17 @@ const MusicAudio = () => {
       setNewPlaylistCover('');
       setIsCreatePlaylistModalOpen(false);
     }
+  };
+
+  const handleTakePlaylistPhoto = () => {
+    handleApiCall('Would be calling API_ROUTE="/api/camera/capture" for taking playlist cover photo');
+    setIsCameraModalOpen(true);
+  };
+
+  const handlePlaylistPhotoCapture = (photoUrl) => {
+    setNewPlaylistCover(photoUrl);
+    setIsCameraModalOpen(false);
+    handleApiCall('Would be calling API_ROUTE="/api/media/save-playlist-cover" for saving playlist cover photo');
   };
 
   const progressPercentage = (currentTime / duration) * 100;
@@ -172,71 +200,73 @@ const MusicAudio = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="min-h-screen bg-background p-4"
+      className="min-h-screen bg-background p-2"
     >
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-primary-500 mb-8 font-poppins">
-          Music Hub
-        </h1>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Now Playing - Main Feature */}
-          <div className="lg:col-span-2 card">
-            <h3 className="text-xl font-semibold mb-6">Now Playing</h3>
+      <div className="max-w-full mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
+          {/* Currently Playing Playlist - Main Feature */}
+          <div className="lg:col-span-3 card">
+            <h3 className="text-xl font-semibold mb-6">Currently Playing Playlist</h3>
             
-            {/* Album Art and Info */}
-            <div className="flex flex-col md:flex-row gap-6 mb-6">
-              <div className="w-48 h-48 mx-auto md:mx-0 relative group">
-                <img
-                  src={current.cover}
-                  alt={current.album}
-                  className="w-full h-full object-cover rounded-xl shadow-lg"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-xl flex items-center justify-center">
-                  <button
-                    onClick={handlePlayPause}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-4 bg-white/90 rounded-full text-black"
-                  >
-                    {isPlaying ? <Pause size={32} /> : <Play size={32} />}
-                  </button>
-                </div>
-              </div>
-              
-              <div className="flex-1 flex flex-col justify-center">
-                <h2 className="text-2xl font-bold mb-2">{current.title}</h2>
-                <p className="text-text-light text-lg mb-1">{current.artist}</p>
-                <p className="text-text-light">{current.album} • 2010</p>
-                
-                <div className="flex items-center gap-4 mt-3">
-                  <button
-                    onClick={() => handleApiCall('Would be calling API_ROUTE="/api/music/like" for liking current song')}
-                    className="p-2 rounded-full hover:bg-surface transition-colors"
-                  >
-                    <Heart className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => handleApiCall('Would be calling API_ROUTE="/api/music/add-to-playlist" for adding to playlist')}
-                    className="p-2 rounded-full hover:bg-surface transition-colors"
-                  >
-                    <Plus className="w-5 h-5" />
-                  </button>
-                </div>
-                
-                {/* Progress Bar */}
-                <div className="mt-4">
-                  <div className="flex justify-between text-sm text-text-light mb-1">
-                    <span>{formatTime(currentTime)}</span>
-                    <span>{formatTime(duration)}</span>
+            {currentPlaylist && (
+              <>
+                {/* Playlist Art and Info */}
+                <div className="flex flex-col md:flex-row gap-6 mb-6">
+                  <div className="w-48 h-48 mx-auto md:mx-0 relative group">
+                    <img
+                      src={currentPlaylist.cover}
+                      alt={currentPlaylist.name}
+                      className="w-full h-full object-cover rounded-xl shadow-lg"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded-xl flex items-center justify-center">
+                      <button
+                        onClick={handlePlayPause}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-4 bg-white/90 rounded-full text-black"
+                      >
+                        {isPlaying ? <Pause size={32} /> : <Play size={32} />}
+                      </button>
+                    </div>
                   </div>
-                  <div className="w-full bg-border rounded-full h-2 cursor-pointer">
-                    <div 
-                      className="bg-primary-500 h-2 rounded-full transition-all" 
-                      style={{ width: `${progressPercentage}%` }}
-                    ></div>
+                  
+                  <div className="flex-1 flex flex-col justify-center">
+                    <h2 className="text-2xl font-bold mb-2">{currentPlaylist.name}</h2>
+                    <p className="text-text-light mb-2">{currentPlaylist.description}</p>
+                    <p className="text-text-light mb-3">{currentPlaylist.count} songs</p>
+                    
+                    {/* Currently Playing Song */}
+                    <div className="bg-surface rounded-lg p-3 mb-4">
+                      <p className="text-sm text-text-light mb-1">Now Playing:</p>
+                      <p className="font-semibold">{current.title}</p>
+                      <p className="text-sm text-text-light">{current.artist}</p>
+                    </div>
+                    
+                    <div className="flex items-center gap-4">
+                      <button
+                        onClick={() => handleApiCall('Would be calling API_ROUTE="/api/music/like" for liking current song')}
+                        className="p-2 rounded-full hover:bg-surface transition-colors"
+                        title="Like current song"
+                      >
+                        <Heart className="w-5 h-5" />
+                      </button>
+                    </div>
+                    
+                    {/* Progress Bar */}
+                    <div className="mt-4">
+                      <div className="flex justify-between text-sm text-text-light mb-1">
+                        <span>{formatTime(currentTime)}</span>
+                        <span>{formatTime(duration)}</span>
+                      </div>
+                      <div className="w-full bg-border rounded-full h-2 cursor-pointer">
+                        <div 
+                          className="bg-primary-500 h-2 rounded-full transition-all" 
+                          style={{ width: `${progressPercentage}%` }}
+                        ></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              </>
+            )}
             
             {/* Playback Controls */}
             <div className="flex items-center justify-center gap-4 mb-6">
@@ -314,7 +344,7 @@ const MusicAudio = () => {
           </div>
           
           {/* Playlist and Library */}
-          <div className="space-y-6">
+          <div className="lg:col-span-2 space-y-3">
             {/* Quick Playlists */}
             <div className="card">
               <div className="flex items-center justify-between mb-4">
@@ -330,18 +360,38 @@ const MusicAudio = () => {
                 {playlists.map((playlist) => (
                   <div 
                     key={playlist.id} 
-                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface transition-colors cursor-pointer"
-                    onClick={() => handlePlaylistClick(playlist)}
+                    className={`flex items-center gap-3 p-3 rounded-lg hover:bg-surface transition-colors cursor-pointer ${
+                      currentPlaylist?.id === playlist.id ? 'bg-primary-500/10 border border-primary-500/20' : ''
+                    }`}
                   >
-                    <img
-                      src={playlist.cover}
-                      alt={playlist.name}
-                      className="w-12 h-12 object-cover rounded-lg"
-                    />
-                    <div className="flex-1 min-w-0">
+                    <div className="relative group">
+                      <img
+                        src={playlist.cover}
+                        alt={playlist.name}
+                        className="w-12 h-12 object-cover rounded-lg"
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all rounded-lg flex items-center justify-center">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePlayPlaylist(playlist);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-white/90 rounded-full text-black"
+                        >
+                          <Play size={16} />
+                        </button>
+                      </div>
+                    </div>
+                    <div 
+                      className="flex-1 min-w-0"
+                      onClick={() => handlePlaylistClick(playlist)}
+                    >
                       <div className="font-medium truncate">{playlist.name}</div>
                       <div className="text-sm text-text-light">{playlist.count} songs</div>
                     </div>
+                    {currentPlaylist?.id === playlist.id && isPlaying && (
+                      <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse" />
+                    )}
                   </div>
                 ))}
               </div>
@@ -482,14 +532,24 @@ const MusicAudio = () => {
             </div>
             
             <div>
-              <label className="block text-sm font-medium mb-2">Cover Image URL (optional)</label>
-              <input
-                type="url"
-                value={newPlaylistCover}
-                onChange={(e) => setNewPlaylistCover(e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg bg-background"
-                placeholder="https://example.com/cover.jpg"
-              />
+              <label className="block text-sm font-medium mb-2">Cover Image</label>
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={newPlaylistCover}
+                  onChange={(e) => setNewPlaylistCover(e.target.value)}
+                  className="flex-1 px-3 py-2 border border-border rounded-lg bg-background"
+                  placeholder="https://example.com/cover.jpg"
+                />
+                <button
+                  onClick={handleTakePlaylistPhoto}
+                  className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors flex items-center gap-2"
+                  title="Take photo for playlist cover"
+                >
+                  <Camera className="w-4 h-4" />
+                  Photo
+                </button>
+              </div>
             </div>
 
             {newPlaylistCover && (
@@ -516,6 +576,51 @@ const MusicAudio = () => {
               </button>
               <button
                 onClick={() => setIsCreatePlaylistModalOpen(false)}
+                className="flex-1 button bg-surface border border-border py-2 rounded-lg hover:bg-surface/80"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Camera Modal for Playlist Covers */}
+      <Modal
+        isOpen={isCameraModalOpen}
+        onClose={() => setIsCameraModalOpen(false)}
+        title="Take Playlist Cover Photo"
+        size="lg"
+      >
+        <div className="p-6">
+          <div className="space-y-4">
+            {/* Camera Preview */}
+            <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
+              <div className="absolute inset-0 flex items-center justify-center text-white">
+                <div className="text-center">
+                  <Camera className="w-16 h-16 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm opacity-75">Camera preview would appear here</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Capture Controls */}
+            <div className="flex justify-center items-center gap-4">
+              <button
+                onClick={() => {
+                  const mockPhotoUrl = `https://picsum.photos/300/300?random=${Date.now()}`;
+                  handlePlaylistPhotoCapture(mockPhotoUrl);
+                }}
+                className="w-16 h-16 bg-primary-500 rounded-full flex items-center justify-center text-white hover:bg-primary-600 transition-colors"
+                title="Capture photo"
+              >
+                <Camera className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="flex gap-3 pt-4">
+              <button
+                onClick={() => setIsCameraModalOpen(false)}
                 className="flex-1 button bg-surface border border-border py-2 rounded-lg hover:bg-surface/80"
               >
                 Cancel
