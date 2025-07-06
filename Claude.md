@@ -90,6 +90,20 @@ zolo/
 
 ## Coding Standards & Practices
 
+### Code Communication Standards
+**CRITICAL**: Never use emojis in any code-related communications including:
+- Code comments and documentation
+- Commit messages and PR descriptions
+- Issue descriptions and code reviews
+- Function names, variable names, or any code elements
+- Technical documentation and README files
+
+**Professional Communication Only**:
+- Use clear, descriptive language without decorative elements
+- Focus on technical accuracy and clarity
+- Maintain professional tone in all development communications
+- Reserve emojis only for user-facing UI elements when explicitly requested
+
 ### Type Casting Requirements
 ```python
 def process_sensor_data(sensor_value: float, threshold: int, device_id: str) -> bool:
