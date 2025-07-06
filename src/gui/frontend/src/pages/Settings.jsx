@@ -13,7 +13,7 @@ import {
   Volume2,
   Bluetooth
 } from 'lucide-react';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../hooks/useTheme.jsx';
 
 /**
  * Settings page - System configuration and theme customization
