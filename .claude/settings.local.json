@@ -8,7 +8,13 @@
       "WebFetch(domain:zen-browser.app)",
       "WebFetch(domain:upscayl.org)",
       "WebFetch(domain:immich.app)",
-      "Bash(npm init:*)"
+      "Bash(npm init:*)",
+      "Bash(npm run build:*)",
+      "Bash(mv:*)",
+      "Bash(git push:*)",
+      "Bash(find:*)",
+      "Bash(git rm:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }
