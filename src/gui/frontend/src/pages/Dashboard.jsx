@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Battery, Wifi, Thermometer, Activity, Camera, Music, AlertTriangle } from 'lucide-react';
+import { Battery, Wifi, Thermometer, Activity, Camera, Music, AlertTriangle, X } from 'lucide-react';
 import TodoWidget from '../components/dashboard/TodoWidget';
 import CalendarWidget from '../components/dashboard/CalendarWidget';
 import AlarmWidget from '../components/dashboard/AlarmWidget';
@@ -18,6 +18,7 @@ const Dashboard = () => {
   const [countdown, setCountdown] = useState(0);
   const [isCountingDown, setIsCountingDown] = useState(false);
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+  const [isQuickActionsExpanded, setIsQuickActionsExpanded] = useState(false);
   
   // Robot status data
   const robotStatus = {
@@ -62,15 +63,38 @@ const Dashboard = () => {
 
   const renderBattery = (level) => {
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <div className="relative">
-          <Battery className={`w-5 h-5 ${getBatteryColor(level)}`} />
-          <div 
-            className={`absolute top-1 left-1 h-3 rounded-sm ${getBatteryColor(level).replace('text-', 'bg-')}`}
-            style={{ width: `${(level / 100) * 12}px` }}
-          />
+          {/* Battery Shell */}
+          <div className="w-8 h-5 border-2 border-current rounded-sm relative">
+            {/* Battery Tip */}
+            <div className="absolute -right-1 top-1 w-1 h-3 bg-current rounded-r-sm"></div>
+            
+            {/* Battery Fill */}
+            <div className="absolute inset-0.5 rounded-sm overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${level}%` }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                className={`h-full rounded-sm ${getBatteryColor(level).replace('text-', 'bg-')}`}
+              />
+            </div>
+            
+            {/* Battery Fill Gradient Effect */}
+            <div className="absolute inset-0.5 rounded-sm overflow-hidden pointer-events-none">
+              <div 
+                className="h-full bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                style={{ width: `${level}%` }}
+              />
+            </div>
+          </div>
         </div>
-        <span className={getBatteryColor(level)}>{level}%</span>
+        <div className="flex flex-col">
+          <span className={`font-semibold ${getBatteryColor(level)}`}>{level}%</span>
+          <span className="text-xs text-text-light">
+            {level > 80 ? 'Excellent' : level > 50 ? 'Good' : level > 20 ? 'Low' : 'Critical'}
+          </span>
+        </div>
       </div>
     );
   };
@@ -228,39 +252,89 @@ const Dashboard = () => {
             </div>
           </div>
           
-          {/* Enhanced Quick Actions */}
-          <div className="card">
-            <h3 className="text-xl font-semibold mb-4">Quick Actions</h3>
-            <div className="space-y-3">
-              <button 
-                className="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
-                onClick={handleTakePhoto}
-              >
-                <Camera className="w-4 h-4" />
-                Take Photo
-              </button>
-              <button 
-                className={`w-full font-medium py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg ${
-                  isMusicPlaying 
-                    ? 'bg-orange-500 hover:bg-orange-600 text-white' 
-                    : 'bg-green-500 hover:bg-green-600 text-white'
-                }`}
-                onClick={handlePlayMusic}
-              >
-                <Music className="w-4 h-4" />
-                {isMusicPlaying ? 'Stop Music' : 'Play Music'}
-              </button>
-              <button 
-                className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
-                onClick={() => handleApiCall('Would be calling API_ROUTE="/api/system/emergency-stop" for emergency shutdown')}
-              >
-                <AlertTriangle className="w-4 h-4" />
-                Emergency Stop
-              </button>
-            </div>
-          </div>
-          
         </div>
+      </div>
+      
+      {/* Floating Quick Actions */}
+      <div className="fixed bottom-20 right-4 z-40">
+        {/* Expanded Actions */}
+        {isQuickActionsExpanded && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            className="mb-4 space-y-3"
+          >
+            <motion.button
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+              className="flex items-center gap-3 bg-primary-500 hover:bg-primary-600 text-white px-4 py-3 rounded-xl shadow-lg transition-all"
+              onClick={() => {
+                handleTakePhoto();
+                setIsQuickActionsExpanded(false);
+              }}
+            >
+              <Camera className="w-5 h-5" />
+              <span className="font-medium">Take Photo</span>
+            </motion.button>
+            
+            <motion.button
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg transition-all font-medium ${
+                isMusicPlaying 
+                  ? 'bg-orange-500 hover:bg-orange-600 text-white' 
+                  : 'bg-green-500 hover:bg-green-600 text-white'
+              }`}
+              onClick={() => {
+                handlePlayMusic();
+                setIsQuickActionsExpanded(false);
+              }}
+            >
+              <Music className="w-5 h-5" />
+              <span>{isMusicPlaying ? 'Stop Music' : 'Play Music'}</span>
+            </motion.button>
+            
+            <motion.button
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="flex items-center gap-3 bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl shadow-lg transition-all font-medium"
+              onClick={() => {
+                handleApiCall('Would be calling API_ROUTE="/api/system/emergency-stop" for emergency shutdown');
+                setIsQuickActionsExpanded(false);
+              }}
+            >
+              <AlertTriangle className="w-5 h-5" />
+              <span>Emergency Stop</span>
+            </motion.button>
+          </motion.div>
+        )}
+        
+        {/* Main FAB */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setIsQuickActionsExpanded(!isQuickActionsExpanded)}
+          className={`w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all ${
+            isQuickActionsExpanded 
+              ? 'bg-gray-500 hover:bg-gray-600 text-white' 
+              : 'bg-primary-500 hover:bg-primary-600 text-white'
+          }`}
+        >
+          <motion.div
+            animate={{ rotate: isQuickActionsExpanded ? 45 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {isQuickActionsExpanded ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <Activity className="w-6 h-6" />
+            )}
+          </motion.div>
+        </motion.button>
       </div>
       
       {/* API Notifications */}

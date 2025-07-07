@@ -9,14 +9,12 @@ const GitHubWidget = ({ onApiCall }) => {
   const generateCommitData = () => {
     const data = [];
     const today = new Date();
-    const daysToShow = 52 * 7; // 52 weeks = 364 days
-    const startDate = new Date(today);
-    startDate.setDate(today.getDate() - daysToShow + 1);
+    const daysToShow = 30; // Simple 30 days for 5x6 grid
     
-    // Generate data for exactly 52 weeks (364 days)
-    for (let i = 0; i < daysToShow; i++) {
-      const currentDate = new Date(startDate);
-      currentDate.setDate(startDate.getDate() + i);
+    // Generate data for exactly 30 days
+    for (let i = daysToShow - 1; i >= 0; i--) {
+      const currentDate = new Date(today);
+      currentDate.setDate(today.getDate() - i);
       
       const dayOfWeek = currentDate.getDay();
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
@@ -106,51 +104,6 @@ const GitHubWidget = ({ onApiCall }) => {
     }
   };
 
-  const organizeDataIntoWeeks = (data) => {
-    const weeks = [];
-    let currentWeek = [];
-    
-    data.forEach((day, index) => {
-      // If it's Sunday (0) and we have days in current week, start new week
-      if (day.dayOfWeek === 0 && currentWeek.length > 0) {
-        weeks.push(currentWeek);
-        currentWeek = [];
-      }
-      
-      currentWeek.push(day);
-      
-      // If we've reached the end of data, push the last week
-      if (index === data.length - 1) {
-        weeks.push(currentWeek);
-      }
-    });
-    
-    return weeks;
-  };
-
-  const getMonthLabels = () => {
-    const labels = [];
-    const today = new Date();
-    const startDate = new Date(today);
-    startDate.setDate(today.getDate() - (52 * 7) + 1);
-    
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    let currentMonth = startDate.getMonth();
-    
-    for (let week = 0; week < 52; week++) {
-      const weekDate = new Date(startDate);
-      weekDate.setDate(startDate.getDate() + week * 7);
-      
-      if (weekDate.getMonth() !== currentMonth) {
-        currentMonth = weekDate.getMonth();
-        labels.push({
-          month: months[currentMonth],
-          position: week
-        });
-      }
-    }
-    return labels;
-  };
 
   const handleViewCommit = (sha) => {
     onApiCall(`Would be calling API_ROUTE="/api/github/commits/${sha}" for viewing commit details`);
@@ -184,37 +137,19 @@ const GitHubWidget = ({ onApiCall }) => {
           </div>
           
           <div className="p-3 bg-surface rounded-lg">
-            <div className="grid grid-cols-53 gap-[2px]">
-              {/* Day labels */}
-              <div className="col-span-1">
-                <div className="grid grid-rows-7 gap-[2px] h-full text-xs text-gray-500">
-                  <div></div>
-                  <div>Mon</div>
-                  <div></div>
-                  <div>Wed</div>
-                  <div></div>
-                  <div>Fri</div>
-                  <div></div>
-                </div>
-              </div>
-              
-              {/* Contribution squares */}
-              {organizeDataIntoWeeks(commitData).map((week, weekIndex) => (
-                <div key={weekIndex} className="grid grid-rows-7 gap-[2px]">
-                  {Array.from({ length: 7 }, (_, dayIndex) => {
-                    const dayData = week.find(day => day.dayOfWeek === dayIndex);
-                    return (
-                      <div
-                        key={dayIndex}
-                        className={`w-[10px] h-[10px] rounded-sm ${
-                          dayData ? getIntensityColor(dayData.level) : 'bg-gray-50 dark:bg-gray-900'
-                        } hover:ring-1 hover:ring-primary-500 cursor-pointer transition-all`}
-                        title={dayData ? `${dayData.count} commits on ${dayData.date}` : 'No data'}
-                      />
-                    );
-                  })}
-                </div>
+            <div className="grid grid-cols-6 gap-1">
+              {commitData.map((day, index) => (
+                <div
+                  key={index}
+                  className={`w-6 h-6 rounded-sm ${
+                    getIntensityColor(day.level)
+                  } hover:ring-1 hover:ring-primary-500 cursor-pointer transition-all`}
+                  title={`${day.count} commits on ${day.date}`}
+                />
               ))}
+            </div>
+            <div className="text-xs text-text-light mt-2 text-center">
+              Past 30 days
             </div>
           </div>
         </div>
@@ -269,48 +204,22 @@ const GitHubWidget = ({ onApiCall }) => {
             {/* Commit Graph */}
             <div className="lg:col-span-2">
               <div className="mb-4">
-                <h4 className="font-medium mb-2">Contribution Graph</h4>
+                <h4 className="font-medium mb-2">Contribution Graph (Past 30 Days)</h4>
                 <div className="relative">
-                  <div className="p-4 bg-surface rounded-lg overflow-x-auto">
-                    <div className="grid grid-cols-53 gap-[2px] min-w-fit">
-                      {/* Day labels */}
-                      <div className="col-span-1">
-                        <div className="grid grid-rows-7 gap-[2px] h-full text-xs text-gray-500">
-                          <div>Sun</div>
-                          <div>Mon</div>
-                          <div>Tue</div>
-                          <div>Wed</div>
-                          <div>Thu</div>
-                          <div>Fri</div>
-                          <div>Sat</div>
+                  <div className="p-4 bg-surface rounded-lg">
+                    <div className="grid grid-cols-6 gap-2">
+                      {commitData.map((day, index) => (
+                        <div
+                          key={index}
+                          className={`w-8 h-8 rounded-sm ${
+                            getIntensityColor(day.level)
+                          } hover:ring-2 hover:ring-primary-500 cursor-pointer transition-all flex items-center justify-center`}
+                          title={`${day.count} commits on ${day.date}`}
+                        >
+                          <span className="text-xs font-medium text-white/80">
+                            {new Date(day.date).getDate()}
+                          </span>
                         </div>
-                      </div>
-                      
-                      {/* Contribution squares */}
-                      {organizeDataIntoWeeks(commitData).map((week, weekIndex) => (
-                        <div key={weekIndex} className="grid grid-rows-7 gap-[2px]">
-                          {Array.from({ length: 7 }, (_, dayIndex) => {
-                            const dayData = week.find(day => day.dayOfWeek === dayIndex);
-                            return (
-                              <div
-                                key={dayIndex}
-                                className={`w-[12px] h-[12px] rounded-sm ${
-                                  dayData ? getIntensityColor(dayData.level) : 'bg-gray-50 dark:bg-gray-900'
-                                } hover:ring-2 hover:ring-primary-500 cursor-pointer transition-all`}
-                                title={dayData ? `${dayData.count} commits on ${dayData.date}` : 'No data'}
-                              />
-                            );
-                          })}
-                        </div>
-                      ))}
-                    </div>
-                    
-                    {/* Month labels */}
-                    <div className="flex justify-between text-xs text-text-light mt-2 ml-8">
-                      {getMonthLabels().map(({ month, position }) => (
-                        <span key={`${month}-${position}`} style={{ marginLeft: `${position * 14}px` }}>
-                          {month}
-                        </span>
                       ))}
                     </div>
                   </div>

@@ -360,15 +360,6 @@ const VisionMedia = () => {
         size="xl"
       >
         <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="text-lg font-medium">All Photos ({mockPhotos.length})</h4>
-            <button
-              onClick={() => setIsGalleryModalOpen(false)}
-              className="p-2 hover:bg-surface rounded-lg"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
           
           {/* Photo Viewer */}
           <div className="relative mb-6">

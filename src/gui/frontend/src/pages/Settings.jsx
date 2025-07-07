@@ -6,7 +6,8 @@ import {
   Wifi, 
   Info, 
   Cpu,
-  User
+  User,
+  Layout
 } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme.jsx';
 import ThemeSettings from '../components/settings/ThemeSettings';
@@ -15,6 +16,7 @@ import HardwareSettings from '../components/settings/HardwareSettings';
 import NetworkSettings from '../components/settings/NetworkSettings';
 import SystemInfo from '../components/settings/SystemInfo';
 import ProfileSettings from '../components/settings/ProfileSettings';
+import WidgetSettings from '../components/settings/WidgetSettings';
 import ApiNotification from '../components/shared/ApiNotification';
 
 /**
@@ -41,6 +43,7 @@ const Settings = () => {
 
   const settingsTabs = [
     { id: 'profile', label: 'Profile', icon: User },
+    { id: 'widgets', label: 'Widgets', icon: Layout },
     { id: 'theme', label: 'Theme & Display', icon: Palette },
     { id: 'hardware', label: 'Hardware', icon: Cpu },
     { id: 'network', label: 'Network', icon: Wifi },
@@ -51,6 +54,8 @@ const Settings = () => {
     switch (activeTab) {
       case 'profile':
         return <ProfileSettings onApiCall={handleApiCall} />;
+      case 'widgets':
+        return <WidgetSettings onApiCall={handleApiCall} />;
       case 'theme':
         return (
           <div className="space-y-6">

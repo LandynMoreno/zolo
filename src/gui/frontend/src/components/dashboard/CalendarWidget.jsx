@@ -118,30 +118,90 @@ const CalendarWidget = ({ onApiCall }) => {
     <>
       <div className="card cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setIsModalOpen(true)}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-semibold">Schedule</h3>
+          <h3 className="text-xl font-semibold">Calendar</h3>
           <div className="flex items-center gap-2">
             <span className="text-sm text-text-light">{upcomingEvents.length} upcoming</span>
             <Calendar className="w-5 h-5 text-primary-500" />
           </div>
         </div>
         
+        {/* Mini Calendar Preview */}
+        <div className="mb-4">
+          <div className="text-sm font-medium mb-2 text-center">
+            {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+          </div>
+          <div className="grid grid-cols-7 gap-1 text-xs text-center">
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => (
+              <div key={day} className="text-text-light font-medium py-1">{day}</div>
+            ))}
+            {(() => {
+              const today = new Date();
+              const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+              const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+              const firstDayOfWeek = firstDay.getDay();
+              const daysInMonth = lastDay.getDate();
+              const days = [];
+              
+              // Empty cells for days before the first day of the month
+              for (let i = 0; i < firstDayOfWeek; i++) {
+                days.push(<div key={`empty-${i}`} className="py-1"></div>);
+              }
+              
+              // Days of the month
+              for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(today.getFullYear(), today.getMonth(), day);
+                const dateStr = date.toISOString().split('T')[0];
+                const dayEvents = events.filter(event => event.date === dateStr);
+                const isToday = day === today.getDate();
+                
+                days.push(
+                  <div key={day} className="relative">
+                    <div className={`py-1 text-xs ${isToday ? 'bg-primary-500 text-white rounded-full w-6 h-6 flex items-center justify-center mx-auto' : ''}`}>
+                      {day}
+                    </div>
+                    {dayEvents.length > 0 && (
+                      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex gap-[1px]">
+                        {dayEvents.slice(0, 3).map(event => (
+                          <div
+                            key={event.id}
+                            className={`w-1 h-1 rounded-full ${eventTypeColors[event.type]}`}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+              
+              return days;
+            })()}
+          </div>
+        </div>
+        
+        {/* Upcoming Events Summary */}
         <div className="space-y-2">
-          {upcomingEvents.map(event => (
-            <div key={event.id} className="flex items-center gap-3 p-2 bg-surface rounded-lg">
+          <div className="text-sm font-medium">Upcoming Events</div>
+          {upcomingEvents.slice(0, 2).map(event => (
+            <div key={event.id} className="flex items-center gap-2 p-2 bg-surface rounded-lg">
               <div className={`w-2 h-2 rounded-full ${eventTypeColors[event.type]}`} />
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium truncate">{event.title}</div>
+                <div className="text-xs font-medium truncate">{event.title}</div>
                 <div className="text-xs text-text-light">{event.date} at {event.time}</div>
               </div>
             </div>
           ))}
+          {upcomingEvents.length > 2 && (
+            <div className="text-xs text-text-light text-center">
+              +{upcomingEvents.length - 2} more events
+            </div>
+          )}
         </div>
       </div>
 
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Schedule & Calendar"
+        title="Calendar & Events"
         size="xl"
       >
         <div className="p-6">

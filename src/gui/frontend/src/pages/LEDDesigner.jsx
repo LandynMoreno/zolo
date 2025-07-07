@@ -230,24 +230,43 @@ const LEDDesigner = () => {
                 <div className="grid grid-cols-6 gap-2">
                   {[
                     // Row 1
-                    '#E8A87C', '#FF6B4A', '#4299E1', '#68D391', '#F59E0B', '#EF4444',
+                    { color: '#E8A87C', name: 'Warm Peach' },
+                    { color: '#FF6B4A', name: 'Coral Red' },
+                    { color: '#4299E1', name: 'Sky Blue' },
+                    { color: '#68D391', name: 'Mint Green' },
+                    { color: '#F59E0B', name: 'Golden Yellow' },
+                    { color: '#EF4444', name: 'Ruby Red' },
                     // Row 2  
-                    '#8B5CF6', '#EC4899', '#10B981', '#F97316', '#6366F1', '#84CC16',
+                    { color: '#8B5CF6', name: 'Purple Dream' },
+                    { color: '#EC4899', name: 'Hot Pink' },
+                    { color: '#10B981', name: 'Emerald Green' },
+                    { color: '#F97316', name: 'Sunset Orange' },
+                    { color: '#6366F1', name: 'Royal Blue' },
+                    { color: '#84CC16', name: 'Lime Green' },
                     // Row 3 - New row
-                    '#FF1744', '#00E676', '#00BCD4', '#FFD54F', '#9C27B0', '#607D8B'
-                  ].map((color) => (
-                    <button
-                      key={color}
-                      className="w-10 h-10 rounded-lg border-2 hover:scale-110 transition-transform"
-                      style={{ 
-                        backgroundColor: color,
-                        borderColor: selectedColor === color ? 'var(--color-primary)' : 'transparent'
-                      }}
-                      onClick={() => {
-                        setSelectedColor(color);
-                        handleApiCall(`Would be calling API_ROUTE="/api/color-picker/quick" for selecting quick color ${color}`);
-                      }}
-                    />
+                    { color: '#FF1744', name: 'Cherry Red' },
+                    { color: '#00E676', name: 'Neon Green' },
+                    { color: '#00BCD4', name: 'Cyan Blue' },
+                    { color: '#FFD54F', name: 'Bright Yellow' },
+                    { color: '#9C27B0', name: 'Deep Purple' },
+                    { color: '#607D8B', name: 'Steel Gray' }
+                  ].map(({ color, name }) => (
+                    <div key={color} className="flex flex-col items-center gap-1">
+                      <button
+                        className="w-10 h-10 rounded-lg border-2 hover:scale-110 transition-transform"
+                        style={{ 
+                          backgroundColor: color,
+                          borderColor: selectedColor === color ? 'var(--color-primary)' : 'transparent'
+                        }}
+                        onClick={() => {
+                          setSelectedColor(color);
+                          handleApiCall(`Would be calling API_ROUTE="/api/color-picker/quick" for selecting quick color ${color}`);
+                        }}
+                      />
+                      <span className="text-xs text-text-light text-center leading-tight">
+                        {name}
+                      </span>
+                    </div>
                   ))}
                 </div>
                 

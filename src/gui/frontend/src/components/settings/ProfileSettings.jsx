@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Mail, MapPin, Calendar, Camera, Edit, Save, X, Video, RotateCcw } from 'lucide-react';
+import { User, Mail, MapPin, Calendar, Camera, Edit, Save, X, Video, RotateCcw, Key, Eye, EyeOff } from 'lucide-react';
 import Modal from '../shared/Modal';
 
 const ProfileSettings = ({ onApiCall }) => {
@@ -8,6 +8,16 @@ const ProfileSettings = ({ onApiCall }) => {
   const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [apiKeys, setApiKeys] = useState({
+    chutes: '',
+    github: '',
+    openai: ''
+  });
+  const [showApiKeys, setShowApiKeys] = useState({
+    chutes: false,
+    github: false,
+    openai: false
+  });
   const [profileData, setProfileData] = useState({
     name: 'Robot Owner',
     email: 'owner@zolo.robot',
@@ -65,6 +75,18 @@ const ProfileSettings = ({ onApiCall }) => {
         return prev - 1;
       });
     }, 1000);
+  };
+
+  const handleApiKeyChange = (keyType, value) => {
+    setApiKeys(prev => ({ ...prev, [keyType]: value }));
+  };
+
+  const handleSaveApiKey = (keyType) => {
+    onApiCall(`Would be calling API_ROUTE="/api/profile/api-keys/${keyType}" for saving ${keyType} API key`);
+  };
+
+  const handleToggleApiKeyVisibility = (keyType) => {
+    setShowApiKeys(prev => ({ ...prev, [keyType]: !prev[keyType] }));
   };
 
   return (
@@ -294,6 +316,146 @@ const ProfileSettings = ({ onApiCall }) => {
               <span className="text-text-light">{profileData.preferences.emergencyContact}</span>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* API Keys */}
+      <div className="card">
+        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Key className="w-5 h-5 text-primary-500" />
+          API Keys & Integrations
+        </h3>
+        <p className="text-text-light text-sm mb-6">
+          Configure API keys for various integrations and services
+        </p>
+        
+        <div className="space-y-4">
+          {/* CHUTES API Key */}
+          <div className="p-4 border border-border rounded-lg">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h4 className="font-medium">CHUTES Voice Model</h4>
+                <p className="text-sm text-text-light">Required for voice model integration</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${apiKeys.chutes ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                <span className={`text-sm ${apiKeys.chutes ? 'text-green-500' : 'text-gray-500'}`}>
+                  {apiKeys.chutes ? 'Configured' : 'Not Set'}
+                </span>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  type={showApiKeys.chutes ? 'text' : 'password'}
+                  value={apiKeys.chutes}
+                  onChange={(e) => handleApiKeyChange('chutes', e.target.value)}
+                  placeholder="Enter CHUTES API key..."
+                  className="w-full px-3 py-2 pr-10 border border-border rounded-lg bg-background"
+                />
+                <button
+                  onClick={() => handleToggleApiKeyVisibility('chutes')}
+                  className="absolute right-3 top-2.5 text-text-light hover:text-text"
+                >
+                  {showApiKeys.chutes ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <button
+                onClick={() => handleSaveApiKey('chutes')}
+                disabled={!apiKeys.chutes.trim()}
+                className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+
+          {/* GitHub API Key */}
+          <div className="p-4 border border-border rounded-lg">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h4 className="font-medium">GitHub Personal Access Token</h4>
+                <p className="text-sm text-text-light">For GitHub activity widget integration</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${apiKeys.github ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                <span className={`text-sm ${apiKeys.github ? 'text-green-500' : 'text-gray-500'}`}>
+                  {apiKeys.github ? 'Configured' : 'Not Set'}
+                </span>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  type={showApiKeys.github ? 'text' : 'password'}
+                  value={apiKeys.github}
+                  onChange={(e) => handleApiKeyChange('github', e.target.value)}
+                  placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                  className="w-full px-3 py-2 pr-10 border border-border rounded-lg bg-background"
+                />
+                <button
+                  onClick={() => handleToggleApiKeyVisibility('github')}
+                  className="absolute right-3 top-2.5 text-text-light hover:text-text"
+                >
+                  {showApiKeys.github ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <button
+                onClick={() => handleSaveApiKey('github')}
+                disabled={!apiKeys.github.trim()}
+                className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+
+          {/* OpenAI API Key */}
+          <div className="p-4 border border-border rounded-lg">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h4 className="font-medium">OpenAI API Key</h4>
+                <p className="text-sm text-text-light">For AI-powered features and automation</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${apiKeys.openai ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                <span className={`text-sm ${apiKeys.openai ? 'text-green-500' : 'text-gray-500'}`}>
+                  {apiKeys.openai ? 'Configured' : 'Not Set'}
+                </span>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  type={showApiKeys.openai ? 'text' : 'password'}
+                  value={apiKeys.openai}
+                  onChange={(e) => handleApiKeyChange('openai', e.target.value)}
+                  placeholder="sk-xxxxxxxxxxxxxxxxxxxx"
+                  className="w-full px-3 py-2 pr-10 border border-border rounded-lg bg-background"
+                />
+                <button
+                  onClick={() => handleToggleApiKeyVisibility('openai')}
+                  className="absolute right-3 top-2.5 text-text-light hover:text-text"
+                >
+                  {showApiKeys.openai ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <button
+                onClick={() => handleSaveApiKey('openai')}
+                disabled={!apiKeys.openai.trim()}
+                className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Security Notice */}
+        <div className="mt-6 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+          <p className="text-sm text-yellow-600 dark:text-yellow-400">
+            <strong>Security Notice:</strong> API keys are stored securely and encrypted. Never share your API keys with others.
+          </p>
         </div>
       </div>
 

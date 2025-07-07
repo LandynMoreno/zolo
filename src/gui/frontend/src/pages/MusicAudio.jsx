@@ -42,45 +42,53 @@ const MusicAudio = () => {
   const songs = [
     {
       id: 1,
-      title: 'Power',
-      artist: 'Kanye West',
-      album: 'My Beautiful Dark Twisted Fantasy',
-      duration: 292,
-      cover: 'https://upload.wikimedia.org/wikipedia/en/5/51/Kanye_West_-_My_Beautiful_Dark_Twisted_Fantasy.jpg'
+      title: 'Summer Vibes',
+      artist: 'The Demo Band',
+      album: 'Feel Good Playlist',
+      duration: 210,
+      cover: 'https://picsum.photos/300/300?random=401'
     },
     {
       id: 2,
-      title: 'All Of The Lights',
-      artist: 'Kanye West feat. Rihanna',
-      album: 'My Beautiful Dark Twisted Fantasy',
-      duration: 299,
-      cover: 'https://upload.wikimedia.org/wikipedia/en/5/51/Kanye_West_-_My_Beautiful_Dark_Twisted_Fantasy.jpg'
+      title: 'Digital Dreams',
+      artist: 'Electronic Collective',
+      album: 'Feel Good Playlist',
+      duration: 245,
+      cover: 'https://picsum.photos/300/300?random=401'
     },
     {
       id: 3,
-      title: 'Monster',
-      artist: 'Kanye West feat. Jay-Z, Rick Ross & Nicki Minaj',
-      album: 'My Beautiful Dark Twisted Fantasy',
-      duration: 378,
-      cover: 'https://upload.wikimedia.org/wikipedia/en/5/51/Kanye_West_-_My_Beautiful_Dark_Twisted_Fantasy.jpg'
+      title: 'Midnight Drive',
+      artist: 'Synthwave Studio',
+      album: 'Feel Good Playlist',
+      duration: 267,
+      cover: 'https://picsum.photos/300/300?random=401'
     },
     {
       id: 4,
-      title: 'Runaway',
-      artist: 'Kanye West feat. Pusha T',
-      album: 'My Beautiful Dark Twisted Fantasy',
-      duration: 540,
-      cover: 'https://upload.wikimedia.org/wikipedia/en/5/51/Kanye_West_-_My_Beautiful_Dark_Twisted_Fantasy.jpg'
+      title: 'Ocean Waves',
+      artist: 'Chill Masters',
+      album: 'Feel Good Playlist',
+      duration: 198,
+      cover: 'https://picsum.photos/300/300?random=401'
+    },
+    {
+      id: 5,
+      title: 'Morning Coffee',
+      artist: 'Jazz Ensemble',
+      album: 'Feel Good Playlist',
+      duration: 223,
+      cover: 'https://picsum.photos/300/300?random=401'
     }
   ];
 
   const playlists = [
     { 
       id: 1, 
-      name: 'My Beautiful Dark Twisted Fantasy', 
-      count: 13, 
-      cover: 'https://upload.wikimedia.org/wikipedia/en/5/51/Kanye_West_-_My_Beautiful_Dark_Twisted_Fantasy.jpg',
-      description: 'Kanye West\'s masterpiece album'
+      name: 'Feel Good Playlist', 
+      count: 5, 
+      cover: 'https://picsum.photos/300/300?random=401',
+      description: 'Uplifting songs to brighten your day'
     },
     { 
       id: 2, 
@@ -106,11 +114,11 @@ const MusicAudio = () => {
   ];
 
   const upNextSongs = [
-    { id: 5, title: 'All Of The Lights', artist: 'Kanye West', cover: 'https://upload.wikimedia.org/wikipedia/en/5/51/Kanye_West_-_My_Beautiful_Dark_Twisted_Fantasy.jpg' },
-    { id: 6, title: 'Monster', artist: 'Kanye West', cover: 'https://upload.wikimedia.org/wikipedia/en/5/51/Kanye_West_-_My_Beautiful_Dark_Twisted_Fantasy.jpg' },
+    { id: 6, title: 'Starlight', artist: 'Dream Pop Collective', cover: 'https://picsum.photos/100/100?random=501' },
     { id: 7, title: 'Gentle Morning', artist: 'Calm Collective', cover: 'https://picsum.photos/100/100?random=301' },
     { id: 8, title: 'Robot Dance', artist: 'Electronic Dreams', cover: 'https://picsum.photos/100/100?random=302' },
-    { id: 9, title: 'Forest Sounds', artist: 'Nature Collective', cover: 'https://picsum.photos/100/100?random=303' }
+    { id: 9, title: 'Forest Sounds', artist: 'Nature Collective', cover: 'https://picsum.photos/100/100?random=303' },
+    { id: 10, title: 'Urban Rhythm', artist: 'City Beats', cover: 'https://picsum.photos/100/100?random=502' }
   ];
 
   // Set default playlist on component mount
@@ -415,7 +423,7 @@ const MusicAudio = () => {
               </div>
               <div className="space-y-2">
                 <div className="text-xs text-text-light">Recent commands:</div>
-                <div className="text-sm bg-surface rounded p-2">"Play My Beautiful Dark Twisted Fantasy"</div>
+                <div className="text-sm bg-surface rounded p-2">"Play Feel Good Playlist"</div>
                 <div className="text-sm bg-surface rounded p-2">"Volume up"</div>
                 <div className="text-sm bg-surface rounded p-2">"Next song"</div>
               </div>
