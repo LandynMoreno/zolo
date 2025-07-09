@@ -1,4 +1,10 @@
 """
-API layer for Zolo robot - handles all external communication
-Provides clean separation between core robot functionality and external interfaces
+Zolo API Package
+
+This package provides the FastAPI-based REST API for the Zolo robot.
+It follows a clean architecture pattern with controllers, managers, and proper error handling.
 """
+
+from .main import app
+
+__all__ = ['app']

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Palette, Save, Play, Square, Zap, Sun } from 'lucide-react';
 import ApiNotification from '../components/shared/ApiNotification';
+import { API_ENDPOINTS, API_BASE_URL } from '../constants/endpoints';
 
 /**
  * NeoPixel LED Designer page - Touch-based LED pattern creation
@@ -51,48 +52,166 @@ const LEDDesigner = () => {
 
   const leds = generateLEDs();
 
-  const handleLEDClick = (index) => {
+  const handleLEDClick = async (index) => {
     setSelectedLED(index);
     setLedColors(prev => ({
       ...prev,
       [index]: selectedColor
     }));
-    handleApiCall(`Would be calling API_ROUTE="/api/leds/${index}" for setting LED ${index} to color ${selectedColor}`);
-  };
-
-  const handleTestPattern = () => {
-    if (isTestingPattern) {
-      handleApiCall('Would be calling API_ROUTE="/api/leds/stop-test" for stopping test pattern');
-      setIsTestingPattern(false);
-    } else {
-      handleApiCall('Would be calling API_ROUTE="/api/leds/test-pattern" for starting test pattern');
-      setIsTestingPattern(true);
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.LED_CONTROL}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          led_index: index,
+          color: selectedColor,
+          brightness: brightness
+        })
+      });
       
-      // Simulate test pattern animation
-      setTimeout(() => {
-        setIsTestingPattern(false);
-      }, 3000);
+      if (response.ok) {
+        handleApiCall(`Successfully set LED ${index} to color ${selectedColor}`);
+      } else {
+        handleApiCall(`Error setting LED ${index}: ${response.statusText}`);
+      }
+    } catch (error) {
+      handleApiCall(`Network error setting LED ${index}: ${error.message}`);
     }
   };
 
-  const handleClearAll = () => {
-    handleApiCall('Would be calling API_ROUTE="/api/leds/clear" for clearing all LED colors');
-    setLedColors({});
-    setSelectedLED(null);
+  const handleTestPattern = async () => {
+    if (isTestingPattern) {
+      try {
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.LED_PATTERN}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'stop'
+          })
+        });
+        
+        if (response.ok) {
+          handleApiCall('Test pattern stopped successfully');
+          setIsTestingPattern(false);
+        } else {
+          handleApiCall(`Error stopping test pattern: ${response.statusText}`);
+        }
+      } catch (error) {
+        handleApiCall(`Network error stopping test pattern: ${error.message}`);
+      }
+    } else {
+      try {
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.LED_PATTERN}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'test',
+            pattern: 'rainbow_cycle',
+            duration: 3000
+          })
+        });
+        
+        if (response.ok) {
+          handleApiCall('Test pattern started successfully');
+          setIsTestingPattern(true);
+          
+          // Auto-stop after 3 seconds
+          setTimeout(() => {
+            setIsTestingPattern(false);
+          }, 3000);
+        } else {
+          handleApiCall(`Error starting test pattern: ${response.statusText}`);
+        }
+      } catch (error) {
+        handleApiCall(`Network error starting test pattern: ${error.message}`);
+      }
+    }
   };
 
-  const handlePresetClick = (preset) => {
-    handleApiCall(`Would be calling API_ROUTE="/api/leds/preset" for applying ${preset.name} pattern`);
-    const newColors = {};
-    leds.forEach((_, index) => {
-      newColors[index] = preset.colors[index % preset.colors.length];
-    });
-    setLedColors(newColors);
+  const handleClearAll = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.LED_CONTROL}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'clear_all'
+        })
+      });
+      
+      if (response.ok) {
+        handleApiCall('All LEDs cleared successfully');
+        setLedColors({});
+        setSelectedLED(null);
+      } else {
+        handleApiCall(`Error clearing LEDs: ${response.statusText}`);
+      }
+    } catch (error) {
+      handleApiCall(`Network error clearing LEDs: ${error.message}`);
+    }
   };
 
-  const handleBrightnessChange = (newBrightness) => {
+  const handlePresetClick = async (preset) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.LED_PATTERN}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'preset',
+          pattern_name: preset.name.toLowerCase().replace(/\s+/g, '_'),
+          colors: preset.colors,
+          brightness: brightness
+        })
+      });
+      
+      if (response.ok) {
+        handleApiCall(`Applied ${preset.name} pattern successfully`);
+        const newColors = {};
+        leds.forEach((_, index) => {
+          newColors[index] = preset.colors[index % preset.colors.length];
+        });
+        setLedColors(newColors);
+      } else {
+        handleApiCall(`Error applying ${preset.name} pattern: ${response.statusText}`);
+      }
+    } catch (error) {
+      handleApiCall(`Network error applying ${preset.name} pattern: ${error.message}`);
+    }
+  };
+
+  const handleBrightnessChange = async (newBrightness) => {
     setBrightness(newBrightness);
-    handleApiCall(`Would be calling API_ROUTE="/api/leds/brightness" for setting brightness to ${newBrightness}%`);
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.LED_CONTROL}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'set_brightness',
+          brightness: parseInt(newBrightness)
+        })
+      });
+      
+      if (response.ok) {
+        handleApiCall(`Brightness set to ${newBrightness}% successfully`);
+      } else {
+        handleApiCall(`Error setting brightness: ${response.statusText}`);
+      }
+    } catch (error) {
+      handleApiCall(`Network error setting brightness: ${error.message}`);
+    }
   };
 
   const handleColorWheelClick = () => {
@@ -260,7 +379,7 @@ const LEDDesigner = () => {
                         }}
                         onClick={() => {
                           setSelectedColor(color);
-                          handleApiCall(`Would be calling API_ROUTE="/api/color-picker/quick" for selecting quick color ${color}`);
+                          handleApiCall(`Selected quick color ${color}`);
                         }}
                       />
                       <span className="text-xs text-text-light text-center leading-tight">
@@ -277,7 +396,7 @@ const LEDDesigner = () => {
                     value={selectedColor}
                     onChange={(e) => {
                       setSelectedColor(e.target.value);
-                      handleApiCall(`Would be calling API_ROUTE="/api/color-picker/set" for setting color to ${e.target.value}`);
+                      handleApiCall(`Selected custom color ${e.target.value}`);
                     }}
                     className="w-12 h-12 rounded-lg border-2 border-border cursor-pointer"
                   />

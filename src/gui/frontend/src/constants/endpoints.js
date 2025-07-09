@@ -55,11 +55,8 @@ export const API_ENDPOINTS = {
   VOICE_TRAINING: '/api/voice/training',
   
   // NeoPixel LEDs
-  LED_PATTERN: '/api/led/pattern',
-  LED_COLOR: '/api/led/color',
-  LED_BRIGHTNESS: '/api/led/brightness',
-  LED_ANIMATION: '/api/led/animation',
-  LED_PRESETS: '/api/led/presets',
+  LED_CONTROL: '/api/v1/led/control',
+  LED_PATTERN: '/api/v1/led/pattern',
   
   // System Settings
   SETTINGS_THEME: '/api/settings/theme',
