@@ -90,6 +90,20 @@ zolo/
 
 ## Coding Standards & Practices
 
+### Code Communication Standards
+**CRITICAL**: Never use emojis in any code-related communications including:
+- Code comments and documentation
+- Commit messages and PR descriptions
+- Issue descriptions and code reviews
+- Function names, variable names, or any code elements
+- Technical documentation and README files
+
+**Professional Communication Only**:
+- Use clear, descriptive language without decorative elements
+- Focus on technical accuracy and clarity
+- Maintain professional tone in all development communications
+- Reserve emojis only for user-facing UI elements when explicitly requested
+
 ### Type Casting Requirements
 ```python
 def process_sensor_data(sensor_value: float, threshold: int, device_id: str) -> bool:
@@ -215,6 +229,150 @@ def is_bright_enough(self, threshold_lux: float = LightConstants.THRESHOLD_DIM) 
 - **PWM Control**: NeoPixel ring, fan speed control
 - **Power Management**: 5V 3A supply, monitor current consumption
 
+## Frontend Development Practices
+
+### Endpoint Constants Management
+**IMPORTANT**: Always use constants for API endpoints instead of hardcoded URLs to maintain single source of truth and easy configuration management.
+
+```javascript
+// src/gui/frontend/constants/endpoints.js
+export const API_ENDPOINTS = {
+  // Robot Control
+  ROBOT_STATUS: '/api/robot/status',
+  ROBOT_MOVEMENT: '/api/robot/movement',
+  ROBOT_STOP: '/api/robot/emergency-stop',
+  
+  // Sensors
+  SENSOR_DISTANCE: '/api/sensors/distance',
+  SENSOR_LIGHT: '/api/sensors/light',
+  SENSOR_CAMERA: '/api/sensors/camera',
+  
+  // Media
+  PHOTO_GALLERY: '/api/media/photos',
+  PHOTO_CAPTURE: '/api/media/capture',
+  MUSIC_PLAYER: '/api/media/music',
+  
+  // WebSocket
+  WS_LIVE_FEED: '/ws/live-feed',
+  WS_SENSOR_DATA: '/ws/sensors',
+  WS_ROBOT_STATUS: '/ws/status'
+};
+
+// Usage in components
+import { API_ENDPOINTS } from '../constants/endpoints';
+
+const fetchRobotStatus = async () => {
+  const response = await fetch(API_ENDPOINTS.ROBOT_STATUS);
+  return response.json();
+};
+```
+
+### Mock API Responses
+**IMPORTANT**: Create mock API responses for GUI development before backend implementation. This enables parallel frontend/backend development and testing.
+
+```javascript
+// src/gui/frontend/mocks/api-responses.js
+export const MOCK_RESPONSES = {
+  robotStatus: {
+    isOnline: true,
+    batteryLevel: 85,
+    temperature: 42.5,
+    lastUpdate: new Date().toISOString()
+  },
+  
+  sensorData: {
+    distance: 150.5,
+    lightLevel: 245,
+    cameraStatus: 'active',
+    timestamp: new Date().toISOString()
+  },
+  
+  photoGallery: [
+    { id: 1, filename: 'photo_001.jpg', timestamp: '2024-01-01T10:00:00Z' },
+    { id: 2, filename: 'photo_002.jpg', timestamp: '2024-01-01T10:15:00Z' }
+  ]
+};
+
+// Usage in development
+const useMockAPI = process.env.NODE_ENV === 'development';
+
+const fetchData = async (endpoint) => {
+  if (useMockAPI) {
+    return MOCK_RESPONSES[endpoint];
+  }
+  return fetch(API_ENDPOINTS[endpoint]).then(res => res.json());
+};
+```
+
+**Benefits**:
+- Parallel frontend/backend development
+- Consistent API contract definition
+- Easy endpoint management and updates
+- Testing without hardware dependencies
+- Clear documentation of expected API responses
+
+### UI Design Principles
+**CRITICAL**: SIMPLICITY ALWAYS WINS WITH UI - This is the foundation of all design decisions.
+
+**Visual Design Standards:**
+- **Rounded Corners**: All UI elements use consistent border radius (8px-16px range)
+- **Smooth Transitions**: All modal opens, page transitions, and state changes use CSS transitions (200-300ms)
+- **Seamless Interface**: No harsh edges or abrupt visual changes
+- **iPhone-style Navigation**: Swipe up/out gestures for page navigation and modal dismissal
+
+**Typography System:**
+- **Primary Fonts**: Roboto, Poppins (professional roundish fonts)
+- **Font Diversity**: Mix fonts strategically for hierarchy and visual interest
+- **Headings & Spacing**: Use typography scale and whitespace to create clear information hierarchy
+
+**Color System & Theming:**
+```javascript
+// src/gui/frontend/constants/theme.js
+export const DESIGN_TOKENS = {
+  colors: {
+    // Zen Browser inspired - soft orange with grey
+    primary: '#E8A87C',     // Soft orange
+    secondary: '#8B9AAF',   // Soft grey-blue
+    background: '#FEFCF8',  // Off-white/cream
+    surface: '#F5F2ED',     // Warm white
+    accent: '#D4B896',      // Warm brown
+    text: '#2C3E50',        // Dark grey
+    textLight: '#6B7280'    // Light grey
+  },
+  
+  borderRadius: {
+    sm: '6px',
+    md: '12px',
+    lg: '16px',
+    xl: '24px'
+  },
+  
+  transitions: {
+    fast: '200ms ease-in-out',
+    medium: '300ms ease-in-out',
+    slow: '500ms ease-in-out'
+  }
+};
+```
+
+**Configurable Theme System:**
+- **Design Settings Page**: Users can customize colors via hex input
+- **Theme Persistence**: Save user preferences to localStorage
+- **CSS Custom Properties**: Use CSS variables for dynamic theming
+- **Color Validation**: Ensure accessibility and contrast ratios
+
+**Component Design Standards:**
+- **Modular Cards**: Reusable card components like Airbnb's design system
+- **Consistent Spacing**: Use 8px grid system for all layouts
+- **Touch-Friendly**: Minimum 44px touch targets for all interactive elements
+- **Open Source Components**: Leverage proven libraries (React Calendar, Color Pickers, etc.)
+
+**Animation & Interactions:**
+- **Micro-interactions**: Subtle feedback for all user actions
+- **Loading States**: Smooth skeleton screens and progress indicators
+- **Gesture Support**: Swipe, pinch, tap gestures for touchscreen
+- **Accessibility**: Respect reduced motion preferences
+
 ## Development Workflow
 ```bash
 # Activate virtual environment
@@ -263,6 +421,38 @@ git push origin master
 ```
 
 **Important**: "Commit" means the full process - staging, committing, and pushing to origin unless explicitly told otherwise.
+
+### Changelog Management
+**CRITICAL**: Always update CHANGELOG.md with detailed entries for every commit to maintain project history and facilitate handoffs.
+
+**Changelog Requirements**:
+- **Update on every commit**: Add entry to CHANGELOG.md describing changes
+- **Detailed descriptions**: Include what was changed, why, and which components affected
+- **Categorization**: Use Added, Changed, Fixed, Removed, Security sections
+- **Version tracking**: Link changelog entries to commit hashes and dates
+- **Migration notes**: Include breaking changes and upgrade instructions when applicable
+
+```bash
+# Example changelog workflow
+# 1. Make code changes
+# 2. Update CHANGELOG.md with detailed entry
+git add src/gui/frontend/components/Dashboard.jsx CHANGELOG.md
+git commit -m "Add responsive Dashboard component with sensor cards and status monitoring for robot GUI"
+git push origin feature/gui-implementation
+```
+
+**Changelog Entry Format**:
+```markdown
+### Added
+- Responsive Dashboard component with real-time sensor monitoring
+- Status cards for battery, temperature, and connectivity indicators
+- Touch-friendly navigation with smooth transitions
+
+### Components Affected
+- src/gui/frontend/components/Dashboard.jsx
+- src/gui/frontend/hooks/useSensorData.js
+- src/gui/frontend/styles/dashboard.css
+```
 
 ### Branching & Pull Request Workflow
 
@@ -407,3 +597,4 @@ When working on Zolo:
 7. Validate all sensor operations before hardware deployment
 8. **Mode Awareness**: Operate according to the specified working mode (PLAN/CODE/HYBRID/REVIEW)
 9. **Commit Process**: When instructed to commit, automatically review all code changes and commit messages for quality, consistency, and adherence to standards
+10. **Response Format**: For lengthy user messages, always start with a checklist of tasks to complete, then provide confirmation upon completion of each item. Be concise and structured in responses to maintain clarity.
