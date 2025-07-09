@@ -12,7 +12,7 @@ import sounddevice as sd
 import numpy as np
 
 
-class MicrophoneController:
+class Microphone:
     """
     <summary>
     Manages microphone operations including recording, volume control, and audio processing

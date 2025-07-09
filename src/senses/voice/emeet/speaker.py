@@ -12,7 +12,7 @@ import sounddevice as sd
 import numpy as np
 
 
-class SpeakerController:
+class Speaker:
     """
     <summary>
     Manages speaker operations including playback, volume control, and audio output

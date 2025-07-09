@@ -586,6 +586,156 @@ gh pr create --title "Add audio integration" --body "Implementation details..."
 - Emergency stop functionality
 - Memory leaks in continuous operations
 
+## API Design Principles (Based on C# Enterprise Pattern)
+
+### Core Architecture Pattern
+**Controller -> Manager -> Hardware**: Following enterprise C# patterns for clean separation of concerns.
+
+**Controller Layer**:
+- Handles HTTP requests and responses
+- Validates input at API boundary
+- Manages error responses and status codes
+- Transforms requests/responses between API and business models
+- Implements proper logging and monitoring
+
+**Manager Layer**:
+- Contains business logic and workflow orchestration
+- Manages hardware dependencies through dependency injection
+- Handles complex operations and multi-step processes
+- Wraps operations in logging and error handling
+- Implements timeout and retry mechanisms
+
+**Hardware Layer**:
+- Direct hardware control and communication
+- Stateful hardware management
+- Low-level operations and sensor readings
+- Hardware-specific error handling
+
+### Request/Response Model Structure
+```python
+class ZoloRequest(BaseModel):
+    """Base request with common fields"""
+    request_id: Optional[str]
+    timestamp: datetime
+    user_id: Optional[str]
+    context: Dict[str, Any]
+    
+    def validate(self, request_type: str, validation_type: str) -> ValidationResult:
+        """Structured validation with clear error messages"""
+        pass
+
+class ZoloResponse(BaseModel):
+    """Base response with standardized structure"""
+    success: bool
+    message: str
+    request_id: Optional[str]
+    timestamp: datetime
+    status: RequestStatus
+    data: Optional[Dict[str, Any]]
+    errors: Optional[List[str]]
+```
+
+### Exception Handling Strategy
+**Structured Exception Hierarchy**:
+- Base `ZoloException` with error kinds and context
+- Specific exceptions for validation, hardware, and business logic errors
+- Context-aware error messages with debugging information
+- Consistent error response format across all endpoints
+
+**Exception Categories**:
+- `ValidationException`: Input validation and business rule violations
+- `HardwareException`: Hardware communication and operation failures
+- `TimeoutException`: Operation timeouts and response delays
+- `NotFoundException`: Resource not found errors
+
+### Logging and Monitoring
+**Structured Logging Pattern**:
+```python
+@log_manager_call("HandleLEDOperation")
+def handle_led_operation(self, request: LEDRequest) -> LEDResponse:
+    """Manager method with automatic logging"""
+    return self.logger.execute_with_logging(
+        operation=lambda: self._execute_operation(request),
+        operation_name="HandleLEDOperation",
+        context={'request_type': type(request).__name__}
+    )
+```
+
+**Logging Features**:
+- Automatic request/response logging
+- Operation timing and performance metrics
+- Error context and stack traces
+- Hardware operation success/failure tracking
+- User action auditing
+
+### Validation and Error Handling
+**Request Validation**:
+- Type-safe request models with Pydantic
+- Custom validation rules for business logic
+- Comprehensive error messages with field-level details
+- Validation result objects with multiple error aggregation
+
+**Error Response Format**:
+```python
+{
+    "success": false,
+    "error": "validation_error",
+    "message": "Invalid LED index: must be between 0 and 11",
+    "context": {
+        "field_name": "led_index",
+        "field_value": 15,
+        "valid_range": "0-11"
+    },
+    "request_id": "req_123",
+    "timestamp": "2024-01-01T10:00:00Z"
+}
+```
+
+### Dependency Injection Pattern
+**Manager Dependencies**:
+- Hardware controllers injected into managers
+- Repository pattern for data access (future enhancement)
+- Testable architecture with mock hardware support
+- Singleton pattern for hardware resources
+
+**Benefits**:
+- Easy testing with mock dependencies
+- Clean separation of concerns
+- Flexible hardware swapping
+- Consistent error handling across components
+
+### API Endpoint Design
+**RESTful Conventions**:
+- Consistent URL structure: `/api/v1/{resource}/{action}`
+- HTTP status codes aligned with operation results
+- Proper use of HTTP methods (GET, POST, PUT, DELETE)
+- Standardized response format across all endpoints
+
+**Example Endpoint Structure**:
+```python
+@app.post("/api/v1/led/color", response_model=LEDColorResponse)
+async def set_led_color(request: LEDColorRequest):
+    """Set individual LED color with validation and error handling"""
+    return controller.validate_and_execute(
+        request=request,
+        handler=manager.handle_set_led_color,
+        operation_name="SetLEDColor"
+    )
+```
+
+### Testing Strategy
+**Unit Testing**:
+- Mock hardware dependencies for reliable testing
+- Test validation logic and error conditions
+- Verify logging and monitoring functionality
+- Test timeout and retry mechanisms
+
+**Integration Testing**:
+- End-to-end API testing with real hardware
+- Performance testing under load
+- Error recovery and fail-safe testing
+- Hardware communication validation
+
 ## Context for Claude
 When working on Zolo:
 1. Always prioritize hardware safety and proper GPIO cleanup
@@ -598,3 +748,5 @@ When working on Zolo:
 8. **Mode Awareness**: Operate according to the specified working mode (PLAN/CODE/HYBRID/REVIEW)
 9. **Commit Process**: When instructed to commit, automatically review all code changes and commit messages for quality, consistency, and adherence to standards
 10. **Response Format**: For lengthy user messages, always start with a checklist of tasks to complete, then provide confirmation upon completion of each item. Be concise and structured in responses to maintain clarity.
+11. **API Design**: Follow the enterprise C# pattern of Controller -> Manager -> Hardware with proper dependency injection, structured logging, and comprehensive error handling
+12. **Git Rebase Practice**: Before making any feature branch pull requests, always rebase on the latest master to ensure linear history and avoid merge conflicts

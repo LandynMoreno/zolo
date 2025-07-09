@@ -12,7 +12,7 @@ import cv2
 import numpy as np
 
 
-class CameraController:
+class Camera:
     """
     <summary>
     Manages camera operations including capture, autofocus, and basic processing

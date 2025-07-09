@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Palette, Save, Play, Square, Zap, Sun } from 'lucide-react';
 import ApiNotification from '../components/shared/ApiNotification';
+import { API_ENDPOINTS, API_BASE_URL } from '../constants/endpoints';
 
 /**
  * NeoPixel LED Designer page - Touch-based LED pattern creation
@@ -15,6 +16,28 @@ const LEDDesigner = () => {
   const [ledColors, setLedColors] = useState({});
   const [isTestingPattern, setIsTestingPattern] = useState(false);
 
+  const makeApiCall = async (endpoint, payload = {}, method = 'POST') => {
+    try {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: method !== 'GET' ? JSON.stringify(payload) : undefined
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'API call failed');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('API call error:', error);
+      throw error;
+    }
+  };
   const handleApiCall = (message) => {
     const notification = {
       id: Date.now(),
@@ -51,52 +74,102 @@ const LEDDesigner = () => {
 
   const leds = generateLEDs();
 
-  const handleLEDClick = (index) => {
-    setSelectedLED(index);
-    setLedColors(prev => ({
-      ...prev,
-      [index]: selectedColor
-    }));
-    handleApiCall(`Would be calling API_ROUTE="/api/leds/${index}" for setting LED ${index} to color ${selectedColor}`);
-  };
-
-  const handleTestPattern = () => {
-    if (isTestingPattern) {
-      handleApiCall('Would be calling API_ROUTE="/api/leds/stop-test" for stopping test pattern');
-      setIsTestingPattern(false);
-    } else {
-      handleApiCall('Would be calling API_ROUTE="/api/leds/test-pattern" for starting test pattern');
-      setIsTestingPattern(true);
+  const handleLEDClick = async (index) => {
+    try {
+      setSelectedLED(index);
+      setLedColors(prev => ({
+        ...prev,
+        [index]: selectedColor
+      }));
       
-      // Simulate test pattern animation
-      setTimeout(() => {
-        setIsTestingPattern(false);
-      }, 3000);
+      const payload = {
+        led_index: index,
+        color: selectedColor,
+        brightness: brightness / 100
+      };
+      
+      await makeApiCall(API_ENDPOINTS.LED_COLOR, payload);
+      handleApiCall(`Successfully set LED ${index} to color ${selectedColor}`);
+    } catch (error) {
+      handleApiCall(`Error setting LED ${index}: ${error.message}`);
     }
   };
 
-  const handleClearAll = () => {
-    handleApiCall('Would be calling API_ROUTE="/api/leds/clear" for clearing all LED colors');
-    setLedColors({});
-    setSelectedLED(null);
+  const handleTestPattern = async () => {
+    try {
+      if (isTestingPattern) {
+        const payload = { pattern: 'stop' };
+        await makeApiCall(API_ENDPOINTS.LED_PATTERN, payload);
+        setIsTestingPattern(false);
+        handleApiCall('Successfully stopped test pattern');
+      } else {
+        const payload = { pattern: 'test', duration: 3000 };
+        await makeApiCall(API_ENDPOINTS.LED_PATTERN, payload);
+        setIsTestingPattern(true);
+        handleApiCall('Successfully started test pattern');
+        
+        // Auto-stop after duration
+        setTimeout(() => {
+          setIsTestingPattern(false);
+        }, 3000);
+      }
+    } catch (error) {
+      handleApiCall(`Error with test pattern: ${error.message}`);
+      setIsTestingPattern(false);
+    }
   };
 
-  const handlePresetClick = (preset) => {
-    handleApiCall(`Would be calling API_ROUTE="/api/leds/preset" for applying ${preset.name} pattern`);
-    const newColors = {};
-    leds.forEach((_, index) => {
-      newColors[index] = preset.colors[index % preset.colors.length];
-    });
-    setLedColors(newColors);
+  const handleClearAll = async () => {
+    try {
+      const payload = { pattern: 'clear' };
+      await makeApiCall(API_ENDPOINTS.LED_PATTERN, payload);
+      setLedColors({});
+      setSelectedLED(null);
+      handleApiCall('Successfully cleared all LED colors');
+    } catch (error) {
+      handleApiCall(`Error clearing LEDs: ${error.message}`);
+    }
   };
 
-  const handleBrightnessChange = (newBrightness) => {
-    setBrightness(newBrightness);
-    handleApiCall(`Would be calling API_ROUTE="/api/leds/brightness" for setting brightness to ${newBrightness}%`);
+  const handlePresetClick = async (preset) => {
+    try {
+      const payload = {
+        preset_name: preset.name.toLowerCase().replace(' ', '_'),
+        colors: preset.colors,
+        brightness: brightness / 100
+      };
+      
+      await makeApiCall(API_ENDPOINTS.LED_PRESETS, payload);
+      
+      const newColors = {};
+      leds.forEach((_, index) => {
+        newColors[index] = preset.colors[index % preset.colors.length];
+      });
+      setLedColors(newColors);
+      
+      handleApiCall(`Successfully applied ${preset.name} pattern`);
+    } catch (error) {
+      handleApiCall(`Error applying preset ${preset.name}: ${error.message}`);
+    }
+  };
+
+  const handleBrightnessChange = async (newBrightness) => {
+    try {
+      setBrightness(newBrightness);
+      
+      const payload = {
+        brightness: newBrightness / 100
+      };
+      
+      await makeApiCall(API_ENDPOINTS.LED_BRIGHTNESS, payload);
+      handleApiCall(`Successfully set brightness to ${newBrightness}%`);
+    } catch (error) {
+      handleApiCall(`Error setting brightness: ${error.message}`);
+    }
   };
 
   const handleColorWheelClick = () => {
-    handleApiCall('Would be calling API_ROUTE="/api/color-picker" for opening advanced color picker');
+    handleApiCall('Advanced color picker functionality - future enhancement');
   };
 
   return (
@@ -260,7 +333,7 @@ const LEDDesigner = () => {
                         }}
                         onClick={() => {
                           setSelectedColor(color);
-                          handleApiCall(`Would be calling API_ROUTE="/api/color-picker/quick" for selecting quick color ${color}`);
+                          handleApiCall(`Selected quick color: ${color}`);
                         }}
                       />
                       <span className="text-xs text-text-light text-center leading-tight">
@@ -277,7 +350,7 @@ const LEDDesigner = () => {
                     value={selectedColor}
                     onChange={(e) => {
                       setSelectedColor(e.target.value);
-                      handleApiCall(`Would be calling API_ROUTE="/api/color-picker/set" for setting color to ${e.target.value}`);
+                      handleApiCall(`Selected color: ${e.target.value}`);
                     }}
                     className="w-12 h-12 rounded-lg border-2 border-border cursor-pointer"
                   />

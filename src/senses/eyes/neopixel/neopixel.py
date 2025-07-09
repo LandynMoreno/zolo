@@ -19,7 +19,7 @@ except ImportError:
 from .constants import NeoPixelConstants
 
 
-class NeoPixelController:
+class NeoPixel:
     """
     <summary>
     Manages NeoPixel ring operations including colors, patterns, and animations
