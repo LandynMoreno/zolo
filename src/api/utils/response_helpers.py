@@ -28,7 +28,7 @@ def create_success_response(
     """
     response = ApiResponse.success_response(data=data, message=message)
     return JSONResponse(
-        content=response.dict(),
+        content=response.model_dump(mode='json'),
         status_code=status_code
     )
 
@@ -51,7 +51,7 @@ def create_error_response(
         message=error.message
     )
     return JSONResponse(
-        content=response.dict(),
+        content=response.model_dump(mode='json'),
         status_code=status_code
     )
 

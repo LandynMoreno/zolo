@@ -37,6 +37,12 @@ python-dotenv==1.0.0
 pyyaml==6.0.1
 psutil==5.9.5
 
+# FastAPI and API Dependencies
+fastapi==0.104.1
+uvicorn==0.24.0
+pydantic==2.4.2
+python-multipart==0.0.6
+
 # Testing
 pytest==7.4.2
 pytest-cov==4.1.0

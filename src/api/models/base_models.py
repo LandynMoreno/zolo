@@ -8,6 +8,7 @@ All API models should inherit from these base classes.
 from typing import Optional, Dict, Any, Generic, TypeVar
 from pydantic import BaseModel, Field
 from datetime import datetime
+import json
 
 T = TypeVar('T')
 
@@ -21,6 +22,9 @@ class BaseRequest(BaseModel):
         """Pydantic configuration"""
         validate_assignment = True
         extra = "forbid"
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
 
 class BaseResponse(BaseModel):
     """Base class for all API responses"""
@@ -32,6 +36,9 @@ class BaseResponse(BaseModel):
     class Config:
         """Pydantic configuration"""
         validate_assignment = True
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
 
 class ApiResponse(BaseResponse, Generic[T]):
     """Generic API response wrapper"""

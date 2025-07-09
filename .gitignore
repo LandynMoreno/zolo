@@ -1,5 +1,11 @@
 venv/
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
 # Node.js
 node_modules/
 npm-debug.log*
@@ -53,3 +59,6 @@ coverage/
 # Logs
 logs/
 *.log
+
+# Claude settings
+.claude/
