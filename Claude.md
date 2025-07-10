@@ -26,7 +26,7 @@ rpi_ws281x==4.3.4
 adafruit-circuitpython-neopixel==6.3.4
 
 # Sensors
-VL53L0X-python==0.1.3
+# VL53L0X-python==0.1.3
 smbus2==0.4.2
 Adafruit_CircuitPython_TSL2561==3.3.4
 
@@ -38,7 +38,7 @@ opencv-python==4.8.1.78
 # Audio Processing
 pyaudio==0.2.11
 sounddevice==0.4.6
-speech_recognition==3.10.0
+SpeechRecognition==3.10.0
 pyttsx3==2.90
 
 # GUI (Touchscreen)
