@@ -20,13 +20,13 @@ from src.core.constants.global_constants import ZoloConstants
 from config.hardware_pins import HardwarePins
 
 # Sensor imports
-from src.senses.vision.camera import CameraController
+from src.senses.vision.camera import Camera
 from src.senses.vision.processing import ImageProcessor
-from src.senses.hearing.emeet import MicrophoneController
+from src.senses.hearing.emeet import Microphone
 from src.senses.hearing.recognition import SpeechRecognizer
-from src.senses.voice.emeet import SpeakerController
+from src.senses.voice.emeet import Speaker
 from src.senses.voice.synthesis import TextToSpeech
-from src.senses.eyes.neopixel import NeoPixelController
+from src.senses.eyes.neopixel import NeoPixel
 from src.senses.proximity.vl53l0x import DistanceSensor
 from src.senses.light.tsl2561 import LightSensor
 
