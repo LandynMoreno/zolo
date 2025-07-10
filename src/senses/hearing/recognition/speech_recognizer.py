@@ -7,7 +7,7 @@ Speech recognition using Google Speech Recognition API and offline alternatives
 """
 
 from typing import Optional, List
-import speech_recognition as sr
+import SpeechRecognition as sr
 import numpy as np
 
 

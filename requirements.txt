@@ -16,7 +16,7 @@ Adafruit-CircuitPython-TSL2561==3.3.4
 
 # Camera & Vision
 # Note: libcamera is system-level, install with: sudo apt install libcamera-tools
-picamera2==0.3.12
+picamera2
 opencv-python==4.8.1.78
 numpy==1.24.3
 
