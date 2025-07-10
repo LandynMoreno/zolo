@@ -9,7 +9,7 @@ from typing import Dict, Any, List, Optional
 from ..models.led_models import LedControlRequest, LedControlResponse, LedPatternRequest, LedPatternResponse
 from ..exceptions.led_exceptions import LedControlException, LedPatternException
 from ..utils.logger import ApiLogger
-from ...senses.eyes.neopixel.neopixel import NeoPixel
+from src.senses.eyes.neopixel.neopixel import NeoPixel
 
 class LedManager:
     """

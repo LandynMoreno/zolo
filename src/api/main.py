@@ -14,7 +14,7 @@ from .controllers.led_controller import LedController
 from .managers.led_manager import LedManager
 from .utils.logger import ApiLogger
 from .utils.response_helpers import handle_api_exception
-from ..senses.eyes.neopixel.neopixel import NeoPixel
+from src.senses.eyes.neopixel.neopixel import NeoPixel
 
 # Global instances for dependency injection
 led_manager: LedManager = None
