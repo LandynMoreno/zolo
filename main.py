@@ -49,13 +49,13 @@ class ZoloRobot:
         self.emergency_stop_triggered = False
         
         # Initialize components
-        self.camera: Optional[CameraController] = None
+        self.camera: Optional[Camera] = None
         self.image_processor: Optional[ImageProcessor] = None
-        self.microphone: Optional[MicrophoneController] = None
+        self.microphone: Optional[Microphone] = None
         self.speech_recognizer: Optional[SpeechRecognizer] = None
-        self.speaker: Optional[SpeakerController] = None
+        self.speaker: Optional[Speaker] = None
         self.text_to_speech: Optional[TextToSpeech] = None
-        self.eyes: Optional[NeoPixelController] = None
+        self.eyes: Optional[NeoPixel] = None
         self.distance_sensor: Optional[DistanceSensor] = None
         self.light_sensor: Optional[LightSensor] = None
         
@@ -74,17 +74,17 @@ class ZoloRobot:
         
         try:
             # Initialize vision components
-            self.camera = CameraController()
+            self.camera = Camera()
             self.image_processor = ImageProcessor()
             
             # Initialize audio components
-            self.microphone = MicrophoneController()
+            self.microphone = Microphone()
             self.speech_recognizer = SpeechRecognizer()
-            self.speaker = SpeakerController()
+            self.speaker = Speaker()
             self.text_to_speech = TextToSpeech()
             
             # Initialize visual feedback
-            self.eyes = NeoPixelController(
+            self.eyes = NeoPixel(
                 pin_number=HardwarePins.NEOPIXEL_DATA,
                 led_count=12,
                 brightness=0.5
