@@ -19,7 +19,7 @@ except ImportError:
 from .constants import NeoPixelConstants
 
 
-class NeoPixelController:
+class NeoPixel:
     """
     <summary>
     Manages NeoPixel ring operations including colors, patterns, and animations
@@ -161,8 +161,126 @@ class NeoPixelController:
         <summary>Clean up NeoPixel resources and turn off all LEDs</summary>
         <returns>None</returns>
         """
-        if self.pixels:
-            self.clear()
-            self.pixels.deinit()
+        try:
+            # Stop any running animations
+            self.stop_animation()
+            
+            # Clear all LEDs
+            if self.is_initialized:
+                with self.animation_lock:
+                    if self.pixel_strip:
+                        for i in range(self.led_count):
+                            self.pixel_strip.setPixelColor(i, Color(0, 0, 0))
+                        self.pixel_strip.show()
+                    elif self.pixels:
+                        self.pixels.fill(NeoPixelConstants.COLOR_OFF)
+                        self.pixels.show()
+                        self.pixels.deinit()
+            
+            # Reset state
             self.pixels = None
-        self.is_initialized = False
+            self.pixel_strip = None
+            self.is_initialized = False
+            
+            print("NeoPixel cleanup completed")
+            
+        except Exception as e:
+            print(f"Error during NeoPixel cleanup: {e}")
+            self.is_initialized = False
+    
+    def show(self) -> bool:
+        """
+        <summary>Update the LED strip to show current pixel colors</summary>
+        <returns>True if successful, False otherwise</returns>
+        """
+        if not self.is_initialized:
+            return False
+        
+        try:
+            if self.pixel_strip:
+                self.pixel_strip.show()
+            elif self.pixels:
+                self.pixels.show()
+            return True
+        except Exception as e:
+            print(f"Error showing pixels: {e}")
+            return False
+    
+    def start_animation(self, animation_func) -> bool:
+        """
+        <summary>Start an animation in a separate thread</summary>
+        <param name="animation_func">Function to run as animation</param>
+        <returns>True if started successfully, False otherwise</returns>
+        """
+        try:
+            # Stop any existing animation
+            self.stop_animation()
+            
+            # Start new animation
+            self.animation_running = True
+            self.animation_thread = threading.Thread(target=animation_func, daemon=True)
+            self.animation_thread.start()
+            return True
+        except Exception as e:
+            print(f"Error starting animation: {e}")
+            return False
+    
+    def stop_animation(self) -> None:
+        """
+        <summary>Stop the current animation</summary>
+        <returns>None</returns>
+        """
+        if self.animation_running:
+            self.animation_running = False
+            if self.animation_thread and self.animation_thread.is_alive():
+                self.animation_thread.join(timeout=1.0)
+            self.animation_thread = None
+    
+    def _wheel(self, pos: int) -> Tuple[int, int, int]:
+        """
+        <summary>Generate rainbow colors across 0-255 positions</summary>
+        <param name="pos">Position (0-255)</param>
+        <returns>RGB color tuple</returns>
+        """
+        pos = pos % 256
+        if pos < 85:
+            return (pos * 3, 255 - pos * 3, 0)
+        elif pos < 170:
+            pos -= 85
+            return (255 - pos * 3, 0, pos * 3)
+        else:
+            pos -= 170
+            return (0, pos * 3, 255 - pos * 3)
+    
+    def pulse_color(self, color: Tuple[int, int, int], duration: float = 1.0) -> bool:
+        """
+        <summary>Pulse a color for a specified duration</summary>
+        <param name="color">RGB color tuple (0-255, 0-255, 0-255)</param>
+        <param name="duration">Duration in seconds</param>
+        <returns>True if successful, False otherwise</returns>
+        """
+        if not self.is_initialized:
+            return False
+        
+        def pulse_animation():
+            steps = int(duration / 0.05)  # 50ms per step
+            for i in range(steps):
+                if not self.animation_running:
+                    break
+                
+                # Calculate pulse brightness
+                brightness = (math.sin(i * math.pi / steps) + 1) / 2
+                r, g, b = color
+                pulsed_color = (int(r * brightness), int(g * brightness), int(b * brightness))
+                
+                with self.animation_lock:
+                    self.set_color(pulsed_color)
+                    self.show()
+                
+                time.sleep(0.05)
+            
+            # Clear after pulse
+            with self.animation_lock:
+                self.clear()
+        
+        return self.start_animation(pulse_animation)

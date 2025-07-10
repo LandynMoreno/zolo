@@ -1,6 +1,6 @@
 """NeoPixel ring integration for Zolo robot eyes/lighting system"""
 
-from .neopixel_controller import NeoPixelController
+from .neopixel import NeoPixel
 from .constants import NeoPixelConstants
 
-__all__ = ['NeoPixelController', 'NeoPixelConstants']
+__all__ = ['NeoPixel', 'NeoPixelConstants']

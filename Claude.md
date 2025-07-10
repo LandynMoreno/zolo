@@ -586,6 +586,156 @@ gh pr create --title "Add audio integration" --body "Implementation details..."
 - Emergency stop functionality
 - Memory leaks in continuous operations
 
+## API Design Principles
+
+### Architecture Pattern
+**CRITICAL**: Follow the C# controller pattern for API design - Controllers -> Managers -> Senses + Business Logic
+
+**Structure**:
+```python
+# Controller Layer (API endpoints)
+class LedController:
+    def __init__(self, led_manager: LedManager, logger: ApiLogger):
+        self.led_manager = led_manager
+        self.logger = logger
+    
+    async def led_control(self, request: LedControlRequest) -> JSONResponse:
+        return await self._validate_and_execute(
+            request=request,
+            handler=self.led_manager.handle_led_control,
+            operation_name="LED Control"
+        )
+
+# Manager Layer (Business Logic)
+class LedManager:
+    def __init__(self, neopixel: NeoPixel, logger: ApiLogger):
+        self.neopixel = neopixel  # Dependency injection
+        self.logger = logger
+    
+    def handle_led_control(self, request: LedControlRequest) -> LedControlResponse:
+        # Business logic with logging wrapper
+        return self.logger.execute_with_logging(
+            context={"request_id": request.request_id},
+            func=lambda: self._execute_led_control(request),
+            operation_name="LED Control"
+        )
+
+# Senses Layer (Hardware Interface)
+class NeoPixel:  # Renamed from NeoPixelController
+    def set_pixel(self, index: int, color: tuple) -> bool:
+        # Hardware operations
+        pass
+```
+
+### Exception Handling
+**CRITICAL**: Use structured exception hierarchy with context and proper error codes
+
+```python
+# Base Exception
+class BaseApiException(Exception):
+    def __init__(self, message: str, error_kind: ErrorKind, context: Dict[str, Any] = None):
+        self.message = message
+        self.error_kind = error_kind
+        self.context = context or {}
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "error_kind": self.error_kind.value,
+            "message": self.message,
+            "context": self.context
+        }
+
+# Specific Exceptions
+class LedControlException(BaseApiException):
+    def __init__(self, message: str, led_index: int = None, color: str = None):
+        context = {"led_index": led_index, "color": color}
+        super().__init__(message, ErrorKind.HARDWARE_ERROR, context)
+```
+
+### Request/Response Models
+**CRITICAL**: Use Pydantic models for request validation and response serialization
+
+```python
+class LedControlRequest(BaseRequest):
+    action: str = Field(..., description="Action to perform")
+    led_index: Optional[int] = Field(default=None, description="LED index (0-11)")
+    color: Optional[str] = Field(default=None, description="Color in hex format")
+    
+    @validator('action')
+    def validate_action(cls, v):
+        valid_actions = ['set_led', 'clear_all', 'set_brightness']
+        if v not in valid_actions:
+            raise ValueError(f"Action must be one of {valid_actions}")
+        return v
+
+class LedControlResponse(BaseResponse):
+    success: bool = Field(description="Operation success status")
+    message: str = Field(description="Response message")
+    led_index: Optional[int] = Field(default=None)
+    color: Optional[str] = Field(default=None)
+```
+
+### Logging Pattern
+**CRITICAL**: Wrap all manager operations with logging context
+
+```python
+class ApiLogger:
+    def execute_with_logging(self, context: Dict[str, Any], func: Callable, operation_name: str) -> Any:
+        start_time = time.time()
+        try:
+            self.log_info(context, f"Starting {operation_name}")
+            result = func()
+            elapsed = time.time() - start_time
+            self.log_info(context, f"Completed {operation_name} in {elapsed:.3f}s")
+            return result
+        except Exception as e:
+            elapsed = time.time() - start_time
+            self.log_error(context, e, f"Failed {operation_name} after {elapsed:.3f}s")
+            raise
+```
+
+### Dependency Injection
+**CRITICAL**: Use dependency injection for loose coupling and testability
+
+```python
+# Main Application
+def create_app():
+    # Initialize dependencies
+    logger = ApiLogger("zolo_api")
+    neopixel = NeoPixel()
+    
+    # Inject dependencies
+    led_manager = LedManager(neopixel=neopixel, logger=logger)
+    led_controller = LedController(led_manager=led_manager, logger=logger)
+    
+    # Setup routes
+    app.include_router(led_controller.get_router(), prefix="/api/v1")
+```
+
+### Repository Pattern (Future)
+**PREPARATION**: Structure allows easy addition of repository layer
+
+```python
+# Future: Add repository layer between manager and senses
+class LedManager:
+    def __init__(self, led_repository: LedRepository, logger: ApiLogger):
+        self.led_repository = led_repository
+        self.logger = logger
+    
+    def handle_led_control(self, request: LedControlRequest) -> LedControlResponse:
+        # Business logic
+        return self.led_repository.update_led(request.led_index, request.color)
+```
+
+### Key Design Principles
+1. **Separation of Concerns**: Controllers handle HTTP, Managers handle business logic, Senses handle hardware
+2. **Dependency Injection**: Loose coupling through constructor injection
+3. **Structured Exceptions**: Custom exception hierarchy with context
+4. **Logging Wrapper**: All operations wrapped with timing and context logging
+5. **Request/Response Models**: Pydantic validation and serialization
+6. **Error Handling**: Consistent error responses with proper HTTP status codes
+7. **Repository Ready**: Architecture supports future repository layer addition
+
 ## Context for Claude
 When working on Zolo:
 1. Always prioritize hardware safety and proper GPIO cleanup
@@ -598,3 +748,6 @@ When working on Zolo:
 8. **Mode Awareness**: Operate according to the specified working mode (PLAN/CODE/HYBRID/REVIEW)
 9. **Commit Process**: When instructed to commit, automatically review all code changes and commit messages for quality, consistency, and adherence to standards
 10. **Response Format**: For lengthy user messages, always start with a checklist of tasks to complete, then provide confirmation upon completion of each item. Be concise and structured in responses to maintain clarity.
+11. **API Design**: Follow the C# controller pattern with Controllers -> Managers -> Senses architecture
+12. **Exception Handling**: Use structured exception hierarchy with context and proper error codes
+13. **Logging**: Wrap all manager operations with logging context for debugging and monitoring
